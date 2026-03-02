@@ -67,5 +67,8 @@ line = c.print << "hello" << c.endl
 BSD 3-Clause License.
 
 ## History
+### v0.0.1
+* Renamed `ColorfulString` to `ColorfulStringBuilder` to avoid conflicts.
+
 ### v0.0.0
 * Initial release.
