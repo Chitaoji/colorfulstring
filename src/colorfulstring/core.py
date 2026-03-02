@@ -18,11 +18,11 @@ __all__ = ["c"]
 class _DefaultReceiver:
     """Fallback receiver used by conditional pipelines."""
 
-    def __lshift__(self, obj: "ColorfulString") -> "ColorfulString":
+    def __lshift__(self, obj: "ColorfulStringBuilder") -> "ColorfulStringBuilder":
         return obj
 
 
-class ColorfulString:
+class ColorfulStringBuilder:
     """Fluent builder for ANSI-colored strings.
 
     ``ColorfulString`` supports color shortcuts (``.r``, ``.g`` ...), concatenation,
@@ -173,7 +173,7 @@ class ColorfulString:
 
     def __make_str(self, obj: str | Self | Any) -> str:
         """Convert value to final ANSI text and optionally emit to printer."""
-        if isinstance(obj, ColorfulString):
+        if isinstance(obj, ColorfulStringBuilder):
             string = str(obj)
         else:
             string = str(obj)
@@ -206,7 +206,7 @@ class ColorfulString:
     @property
     def endl(self) -> Self:
         """Return a newline fragment."""
-        return ColorfulString(string="\n")
+        return ColorfulStringBuilder(string="\n")
 
     @property
     def d(self) -> Self:
@@ -249,4 +249,4 @@ class ColorfulString:
         return self.copy(default_color="W")
 
 
-c = ColorfulString()
+c = ColorfulStringBuilder()
