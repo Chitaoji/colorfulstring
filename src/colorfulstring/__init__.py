@@ -1,16 +1,10 @@
-"""
-# colorfulstring
-A template repository for building python packages.
+"""Public package API for ``colorfulstring``.
 
-## See Also
-### Github repository
-* https://github.com/Chitaoji/colorfulstring/
+`colorfulstring` offers a fluent API for composing ANSI-colored strings in terminals.
+Most users only need the exported singleton ``c``:
 
-### PyPI project
-* https://pypi.org/project/colorfulstring/
-
-## License
-This project falls under the BSD 3-Clause License.
+>>> from colorfulstring import c
+>>> print(c.g << "done")
 
 """
 
