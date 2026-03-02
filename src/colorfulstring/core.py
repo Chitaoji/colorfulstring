@@ -1,7 +1,7 @@
 """
 Contains the core of colorfulstring.
 
-This module defines :class:`ColorfulString` and the singleton ``c`` used to build
+This module defines :class:`ColorfulString` and the singleton `c` used to build
 ANSI-colored terminal strings with a fluent API.
 
 NOTE: this module is private. All functions and objects are available in the main
@@ -25,10 +25,10 @@ class _DefaultReceiver:
 class ColorfulStringBuilder:
     """Fluent builder for ANSI-colored strings.
 
-    ``ColorfulString`` supports color shortcuts (``.r``, ``.g`` ...), concatenation,
-    piping with ``<<``/``@``, and conditional output with ``ifelse``/``iftrue``/``ifnot``.
+    `ColorfulString` supports color shortcuts (`.r`, `.g` ...), concatenation,
+    piping with `<<`/`@`, and conditional output with `ifelse`/`iftrue`/`ifnot`.
 
-    Typical usage starts from the module-level singleton ``c``.
+    Typical usage starts from the module-level singleton `c`.
     """
 
     def __init__(
@@ -79,8 +79,8 @@ class ColorfulStringBuilder:
     def __lshift__(self, obj: str | Self | Any) -> Self:
         """Pipe data into the builder.
 
-        ``builder << value`` appends ``value`` after converting color tokens.
-        Passing another ``ColorfulString`` is used internally to wire conditional chains.
+        `builder << value` appends `value` after converting color tokens.
+        Passing another `ColorfulString` is used internally to wire conditional chains.
         """
         if isinstance(obj, self.__class__):
             if obj._status is not None:
@@ -97,27 +97,27 @@ class ColorfulStringBuilder:
         return self.__recv(obj)
 
     def __rlshift__(self, obj: str | Self | Any) -> Self:
-        """Support ``value << builder`` style piping."""
+        """Support `value << builder` style piping."""
         return c << obj << self
 
     def __rshift__[T](self, obj: type[T]) -> T:
         """Cast the finalized string to another type.
 
         Example:
-            ``(c.r << "42") >> int``
+            `(c.r << "42") >> int`
         """
         if self._status is None and self._string is not None:
             return obj(self._string)
         raise ValueError(f"nothing to convert to {obj}")
 
     def __matmul__(self, obj: str | Self | Any) -> Self:
-        """Alias of ``<<`` for users who prefer ``@`` syntax."""
+        """Alias of `<<` for users who prefer `@` syntax."""
         return self << obj
 
     def ifelse(self, condition: bool) -> Self:
         """Start a two-branch conditional chain.
 
-        The first subsequent value is used when ``condition`` is true; the second one
+        The first subsequent value is used when `condition` is true; the second one
         is used otherwise.
         """
         if self._status is not None:
@@ -125,13 +125,13 @@ class ColorfulStringBuilder:
         return self.copy(status=(bool(condition), True))
 
     def iftrue(self, condition: bool) -> Self:
-        """Append next value only when ``condition`` is true."""
+        """Append next value only when `condition` is true."""
         if self._status is not None:
             raise ValueError("duplicated call to ifelse(), iftrue() or ifnot()")
         return self.copy(string="", status=(not bool(condition), False))
 
     def ifnot(self, condition: bool) -> Self:
-        """Append next value only when ``condition`` is false."""
+        """Append next value only when `condition` is false."""
         if self._status is not None:
             raise ValueError("duplicated call to ifelse(), iftrue() or ifnot()")
         return self.copy(string="", status=(bool(condition), False))

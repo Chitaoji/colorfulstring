@@ -1,7 +1,7 @@
-"""Public package API for ``colorfulstring``.
+"""Public package API for `colorfulstring`.
 
 `colorfulstring` offers a fluent API for composing ANSI-colored strings in terminals.
-Most users only need the exported singleton ``c``:
+Most users only need the exported singleton `c`:
 
 >>> from colorfulstring import c
 >>> print(c.g << "done")
