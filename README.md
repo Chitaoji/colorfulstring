@@ -1,25 +1,20 @@
-# *auto-generated*
-A template repository for building python packages.
+# colorfulstring
+
 
 ## Installation
 ```sh
-*auto-generated*
-```
-
-## Requirements
-```txt
-*auto-generated*
+$ pip install colorfulstring
 ```
 
 ## See Also
 ### Github repository
-* *auto-generated*
+* https://github.com/Chitaoji/colorfulstring/
 
 ### PyPI project
-* *auto-generated*
+* https://pypi.org/project/colorfulstring/
 
 ## License
-*auto-generated*
+This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.0.0

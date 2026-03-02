@@ -1,13 +1,13 @@
 """
-# template
+# colorfulstring
 A template repository for building python packages.
 
 ## See Also
 ### Github repository
-* https://github.com/Chitaoji/template/
+* https://github.com/Chitaoji/colorfulstring/
 
 ### PyPI project
-* https://pypi.org/project/template/
+* https://pypi.org/project/colorfulstring/
 
 ## License
 This project falls under the BSD 3-Clause License.
