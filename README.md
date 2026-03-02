@@ -1,5 +1,4 @@
 # colorfulstring
-
 `colorfulstring` is a lightweight Python utility for building ANSI-colored terminal strings with a fluent, chainable API.
 
 ## Installation
@@ -17,17 +16,14 @@ print(c.r << "Error:" << " something went wrong")
 print(c.g("OK"))
 ```
 
-## Core Usage
+## Usage
 
 ### 1) Color Shortcuts
 
 Available color properties are `d/r/g/y/b/p/c/w`, which map to dark, red, green, yellow, blue, purple, cyan, and white.
 
 ```python
-from colorfulstring import c
-
-msg = c.y << "Warning"
-print(msg)
+print(c.y << "Warning")
 ```
 
 ### 2) Pipe-Style Chaining
@@ -35,10 +31,7 @@ print(msg)
 Use `<<` (or `@`) to append fragments in sequence:
 
 ```python
-from colorfulstring import c
-
-line = c.b << "[INFO]" << " service started"
-print(line)
+print(c.b << "[INFO]" << " service started")
 ```
 
 ### 3) Conditional Output
@@ -48,7 +41,6 @@ print(line)
 - `ifelse(condition)`: choose between the next two fragments.
 
 ```python
-from colorfulstring import c
 
 ok = True
 line = c << "status: " << c.ifelse(ok) << c.g("success") << c.r("failed")
@@ -57,20 +49,23 @@ print(line)
 
 ### 4) Immediate Printing
 
-`.print` outputs each generated fragment immediately (without an automatic newline). It can be combined with `.endl`.
+`c.print` outputs each generated fragment immediately (without an automatic newline). It can be combined with `c.endl`.
 
 ```python
-from colorfulstring import c
-
-c.print.r("hello")
-c.print.endl
+line = c.print << "hello" << c.endl
 ```
 
 ## See Also
+### Github repository
+* https://github.com/Chitaoji/colorfulstring/
 
-- GitHub: https://github.com/Chitaoji/colorfulstring/
-- PyPI: https://pypi.org/project/colorfulstring/
+### PyPI project
+* https://pypi.org/project/colorfulstring/
+
 
 ## License
-
 BSD 3-Clause License.
+
+## History
+### v0.0.0
+* Initial release.

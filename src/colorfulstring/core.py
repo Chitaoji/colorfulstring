@@ -1,13 +1,11 @@
-"""Core implementation for :mod:`colorfulstring`.
+"""
+Contains the core of colorfulstring.
 
 This module defines :class:`ColorfulString` and the singleton ``c`` used to build
 ANSI-colored terminal strings with a fluent API.
 
-Although available via ``colorfulstring.core``, typical usage should import from the
-package root:
-
->>> from colorfulstring import c
->>> msg = c.r("error") + "!"
+NOTE: this module is private. All functions and objects are available in the main
+`colorfulstring` namespace - use that instead.
 
 """
 
