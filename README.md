@@ -62,7 +62,7 @@ line = c.print << "hello" << c.endl
 
 ### 5) Underline
 
-Use `.underline` to add underline style; it must be placed before the foreground color in chained shortcuts:
+Use `.underline` to add underline style:
 
 ```python
 print(c.underline << "plain underline")
@@ -70,7 +70,7 @@ print(c.underline.g << "green underline")
 print(c.underline.g.b << "green on blue underline")
 ```
 
-For inline tokens, underline must also be before foreground (for example: `$_B-.G:text$`). Writing it after foreground like `$B_text$` is invalid and will raise `ValueError`.
+
 
 ### 6) Light/Faint Foreground
 
