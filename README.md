@@ -101,7 +101,7 @@ Grammar (inside `$...$`):
 
 Escaping:
 
-- Non-token fragments are not wrapped, e.g. `$hello$` stays unwrapped.
+- Non-token fragments are not colored, e.g. `$hello$`.
 
 ## See Also
 ### Github repository
