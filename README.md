@@ -97,7 +97,7 @@ Grammar (inside `$...$`):
   - `FG-` (faint foreground)
   - `FG.BG` (foreground + background)
   - `FG-.BG` (faint foreground + background)
-  - optional underline prefix: `_${TOKEN}`
+  - optional underline prefix: `_{TOKEN}`
 
 Escaping:
 
