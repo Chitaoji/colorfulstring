@@ -22,15 +22,9 @@ print(c.g("OK"))
 
 Available shortcut color properties are `d/r/g/y/b/p/c/w` (dark/red/green/yellow/blue/purple/cyan/white).
 
-You can chain them for background presets, e.g. `c.b.g` means blue foreground + green background (same as `$B.G`).
+You can chain them for background presets, e.g. `c.b.g` means blue foreground + green background.
 
 Chaining is limited to two colors; `c.b.g.g` is not allowed.
-
-Background syntax supports `$FG.BG` (foreground.background), for example `$B.G` means blue text on green background.
-
-You can enable underline around the foreground token with `_`, e.g. `$_B` or `$B_` (also works with background forms such as `$_B.G`).
-
-Background helper properties are also available: `bg_black`, `bg_red`, `bg_green`, `bg_yellow`, `bg_blue`, `bg_purple`, `bg_cyan`, `bg_white`.
 
 ```python
 print(c.y << "Warning")
