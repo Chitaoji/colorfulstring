@@ -60,6 +60,16 @@ print(line)
 line = c.print << "hello" << c.endl
 ```
 
+### 5) Underline
+
+Use `.underline` to add underline style, and it can appear anywhere in the chain:
+
+```python
+print(c.underline << "plain underline")
+print(c.g.underline << "green underline")
+print(c.g.b.underline << "green on blue underline")
+```
+
 ## See Also
 ### Github repository
 * https://github.com/Chitaoji/colorfulstring/
