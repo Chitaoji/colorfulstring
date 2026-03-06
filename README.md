@@ -70,14 +70,18 @@ print(c.underline.g << "green underline")
 print(c.underline.g.b << "green on blue underline")
 ```
 
-### 6) Light/Faint Foreground
+### 6) Faint Foreground
 
-Use `.faint` to switch the foreground to a faint ANSI variant (`\033[2;COLORm`). It must follow the foreground color token.
+Use `.faint` to switch the foreground to a faint ANSI variant. It must follow the foreground color token.
 
 ```python
 print(c.r.faint << "faint red")
 print(c.g.faint.b << "faint green on blue")
 ```
+
+Note: 
+
+- `c.faint` is no different from `c`, if you need a faint dark color, try `c.d.faint`. 
 
 ### 7) Inline Token Grammar
 
