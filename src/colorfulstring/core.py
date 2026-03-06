@@ -15,6 +15,19 @@ from typing import Any, Callable, Self
 __all__ = ["c"]
 
 
+ANSI_TOKEN_MAP: dict[str, str] = {
+    # Foreground colors
+    "D": "\033[30m",  # Dark/Black
+    "R": "\033[31m",  # Red
+    "G": "\033[32m",  # Green
+    "Y": "\033[33m",  # Yellow
+    "B": "\033[34m",  # Blue
+    "P": "\033[35m",  # Purple
+    "C": "\033[36m",  # Cyan
+    "W": "\033[37m",  # White
+}
+
+
 class _DefaultReceiver:
     """Fallback receiver used by conditional pipelines."""
 
@@ -179,20 +192,42 @@ class ColorfulStringBuilder:
             string = str(obj)
             if self._default_color and string:
                 string = f"${self._default_color}{string}$"
-            string = (
-                string.replace("$D", "\033[30m")  # Dark
-                .replace("$R", "\033[31m")  # Red
-                .replace("$G", "\033[32m")  # Green
-                .replace("$Y", "\033[33m")  # Yellow
-                .replace("$B", "\033[34m")  # Blue
-                .replace("$P", "\033[35m")  # Purple
-                .replace("$C", "\033[36m")  # Cyan
-                .replace("$W", "\033[37m")  # White
-                .replace("$", "\033[0m")
-            )
+            string = self.__render_ansi_tokens(string)
         if self._printer is not None:
             self._printer(string)
         return string
+
+    def __render_ansi_tokens(self, value: str) -> str:
+        """Translate `$TOKEN` and `$FG.BG` fragments to ANSI escape codes."""
+        parts: list[str] = []
+        i = 0
+        while i < len(value):
+            if value[i] != "$":
+                parts.append(value[i])
+                i += 1
+                continue
+
+            if i + 3 < len(value) and value[i + 2] == ".":
+                fg_token = value[i + 1]
+                bg_token = value[i + 3]
+                if fg_token in ANSI_TOKEN_MAP and bg_token in ANSI_TOKEN_MAP:
+                    fg_code = ANSI_TOKEN_MAP[fg_token]
+                    bg_code = f"\033[{int(ANSI_TOKEN_MAP[bg_token][2:4]) + 10}m"
+                    parts.append(fg_code)
+                    parts.append(bg_code)
+                    i += 4
+                    continue
+
+            token = value[i + 1 : i + 2]
+            if token in ANSI_TOKEN_MAP:
+                parts.append(ANSI_TOKEN_MAP[token])
+                i += 2
+                continue
+
+            parts.append("\033[0m")
+            i += 1
+
+        return "".join(parts)
 
     def __asstr(self) -> str:
         """Get accumulated output or an empty string."""
@@ -208,45 +243,93 @@ class ColorfulStringBuilder:
         """Return a newline fragment."""
         return ColorfulStringBuilder(string="\n")
 
+    def __with_color_token(self, token: str) -> Self:
+        """Set foreground token or one background token (at most two chained colors)."""
+        if not self._default_color:
+            return self.copy(default_color=token)
+        if "." not in self._default_color:
+            return self.copy(default_color=f"{self._default_color}.{token}")
+        raise ValueError("only two chained colors are supported, e.g. c.b.g")
+
     @property
     def d(self) -> Self:
         """Return a builder with dark/black default color."""
-        return self.copy(default_color="D")
+        return self.__with_color_token("D")
 
     @property
     def r(self) -> Self:
         """Return a builder with red default color."""
-        return self.copy(default_color="R")
+        return self.__with_color_token("R")
 
     @property
     def g(self) -> Self:
         """Return a builder with green default color."""
-        return self.copy(default_color="G")
+        return self.__with_color_token("G")
 
     @property
     def y(self) -> Self:
         """Return a builder with yellow default color."""
-        return self.copy(default_color="Y")
+        return self.__with_color_token("Y")
 
     @property
     def b(self) -> Self:
         """Return a builder with blue default color."""
-        return self.copy(default_color="B")
+        return self.__with_color_token("B")
 
     @property
     def p(self) -> Self:
         """Return a builder with purple default color."""
-        return self.copy(default_color="P")
+        return self.__with_color_token("P")
 
     @property
     def c(self) -> Self:
         """Return a builder with cyan default color."""
-        return self.copy(default_color="C")
+        return self.__with_color_token("C")
 
     @property
     def w(self) -> Self:
         """Return a builder with white default color."""
-        return self.copy(default_color="W")
+        return self.__with_color_token("W")
+
+    @property
+    def bg_black(self) -> Self:
+        """Return a builder with default `W.D` (white on black)."""
+        return self.copy(default_color="W.D")
+
+    @property
+    def bg_red(self) -> Self:
+        """Return a builder with default `W.R` (white on red)."""
+        return self.copy(default_color="W.R")
+
+    @property
+    def bg_green(self) -> Self:
+        """Return a builder with default `W.G` (white on green)."""
+        return self.copy(default_color="W.G")
+
+    @property
+    def bg_yellow(self) -> Self:
+        """Return a builder with default `D.Y` (dark on yellow)."""
+        return self.copy(default_color="D.Y")
+
+    @property
+    def bg_blue(self) -> Self:
+        """Return a builder with default `W.B` (white on blue)."""
+        return self.copy(default_color="W.B")
+
+    @property
+    def bg_purple(self) -> Self:
+        """Return a builder with default `W.P` (white on purple)."""
+        return self.copy(default_color="W.P")
+
+    @property
+    def bg_cyan(self) -> Self:
+        """Return a builder with default `D.C` (dark on cyan)."""
+        return self.copy(default_color="D.C")
+
+    @property
+    def bg_white(self) -> Self:
+        """Return a builder with default `D.W` (dark on white)."""
+        return self.copy(default_color="D.W")
 
 
 c = ColorfulStringBuilder()

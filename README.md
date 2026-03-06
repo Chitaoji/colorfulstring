@@ -20,10 +20,25 @@ print(c.g("OK"))
 
 ### 1) Color Shortcuts
 
-Available color properties are `d/r/g/y/b/p/c/w`, which map to dark, red, green, yellow, blue, purple, cyan, and white.
+Available shortcut color properties are `d/r/g/y/b/p/c/w` (dark/red/green/yellow/blue/purple/cyan/white).
+
+You can chain them for background presets, e.g. `c.b.g` means blue foreground + green background (same as `$B.G`).
+
+Chaining is limited to two colors; `c.b.g.g` is not allowed.
+
+Background syntax supports `$FG.BG` (foreground.background), for example `$B.G` means blue text on green background.
+
+Background helper properties are also available: `bg_black`, `bg_red`, `bg_green`, `bg_yellow`, `bg_blue`, `bg_purple`, `bg_cyan`, `bg_white`.
 
 ```python
 print(c.y << "Warning")
+print(c.b.g << "Blue on green via chaining")
+```
+
+```python
+print(c << "$B.GBlue on green$")
+print(c << "$D.YDark on yellow$")
+print(c.bg_blue << "Blue background preset")
 ```
 
 ### 2) Pipe-Style Chaining
