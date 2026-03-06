@@ -81,17 +81,8 @@ print(c.r.light << "faint red")
 print(c.g.light.b << "faint green on blue")
 ```
 
-Inline token form uses `-` after the foreground token and requires `:` before text, e.g. `$B-:text$` or `$_B-.G:text$`.
-
 ### 7) Inline Token Grammar
 
-Inline token parsing now requires `:` and a closing `$`:
-
-- ✅ Valid: `$_G.B:message$`
-- ✅ Valid: `$R:error$`
-- ❌ Invalid as token (treated as plain text inside `$...$`): `$_G.Bmessage$`
-
-In short: without `:`, everything between `$` and the next `$` is treated as normal text.
 
 
 ## See Also
