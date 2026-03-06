@@ -211,17 +211,18 @@ class ColorfulStringBuilder:
                             token = f"{token}-"
                     if self._underlined:
                         token = f"_{token}"
-                    string = f"${token}{string}$"
+                    string = f"${token}:{string}$"
                 string = self.__render_ansi_tokens(string)
         if self._printer is not None:
             self._printer(string)
         return string
 
     def __render_ansi_tokens(self, value: str) -> str:
-        """Translate `$TOKEN`/`$FG.BG` fragments to ANSI escape codes.
+        """Translate `$TOKEN:text$` fragments to ANSI escape codes.
 
-        Underline can be toggled by prefixing the foreground token with `_`,
-        such as `$_B` or `$_B-.G`.
+        Valid inline format is `$TOKEN:text$` where `TOKEN` is `FG`, `FG-`,
+        `FG.BG`, `FG-.BG`, and can optionally be prefixed by `_` for underline.
+        Fragments without `:` are treated as plain text between `$...$`.
         """
         parts: list[str] = []
         i = 0
@@ -231,48 +232,73 @@ class ColorfulStringBuilder:
                 i += 1
                 continue
 
-            token_start = i + 1
-            underlined = False
-
-            if token_start < len(value) and value[token_start] == "_":
-                underlined = True
-                token_start += 1
-
-            fg_token = value[token_start : token_start + 1].upper()
-            if fg_token in ANSI_TOKEN_MAP:
-                token_end = token_start + 1
-                light = False
-                if token_end < len(value) and value[token_end] == "-":
-                    light = True
-                    token_end += 1
-
-                if underlined:
-                    parts.append("\033[4m")
-
-                fg_base_code = int(ANSI_TOKEN_MAP[fg_token][2:4])
-                if light:
-                    parts.append(f"\033[2;{fg_base_code}m")
-                else:
-                    parts.append(ANSI_TOKEN_MAP[fg_token])
-
-                if (
-                    token_end + 1 < len(value)
-                    and value[token_end] == "."
-                    and value[token_end + 1].upper() in ANSI_TOKEN_MAP
-                ):
-                    bg_token = value[token_end + 1].upper()
-                    bg_code = f"\033[{int(ANSI_TOKEN_MAP[bg_token][2:4]) + 10}m"
-                    parts.append(bg_code)
-                    token_end += 2
-
-                if token_end < len(value) and value[token_end] == "_":
-                    raise ValueError("underline marker '_' must be before foreground color")
-
-                i = token_end
+            token_end = value.find("$", i + 1)
+            if token_end < 0:
+                parts.append("$")
+                i += 1
                 continue
 
+            fragment = value[i + 1 : token_end]
+            if ":" not in fragment:
+                parts.append(fragment)
+                i = token_end + 1
+                continue
+
+            token, text = fragment.split(":", 1)
+            underlined = token.startswith("_")
+            if underlined:
+                token = token[1:]
+
+            fg_token = token[:1].upper()
+            if fg_token not in ANSI_TOKEN_MAP:
+                parts.append(fragment)
+                i = token_end + 1
+                continue
+
+            parsed_end = 1
+            light = False
+            if len(token) > parsed_end and token[parsed_end] == "-":
+                light = True
+                parsed_end += 1
+
+            bg_token = ""
+            if len(token) > parsed_end and token[parsed_end] == ".":
+                if len(token) <= parsed_end + 1:
+                    parts.append(fragment)
+                    i = token_end + 1
+                    continue
+                bg_token = token[parsed_end + 1 : parsed_end + 2].upper()
+                if bg_token not in ANSI_TOKEN_MAP:
+                    parts.append(fragment)
+                    i = token_end + 1
+                    continue
+                parsed_end += 2
+
+            if parsed_end != len(token):
+                if "_" in token:
+                    raise ValueError(
+                        "underline marker '_' must be before foreground color"
+                    )
+                parts.append(fragment)
+                i = token_end + 1
+                continue
+
+            if underlined:
+                parts.append("\033[4m")
+
+            fg_base_code = int(ANSI_TOKEN_MAP[fg_token][2:4])
+            if light:
+                parts.append(f"\033[2;{fg_base_code}m")
+            else:
+                parts.append(ANSI_TOKEN_MAP[fg_token])
+
+            if bg_token:
+                bg_code = f"\033[{int(ANSI_TOKEN_MAP[bg_token][2:4]) + 10}m"
+                parts.append(bg_code)
+
+            parts.append(text)
             parts.append("\033[0m")
-            i += 1
+            i = token_end + 1
 
         return "".join(parts)
 
