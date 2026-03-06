@@ -251,7 +251,7 @@ class ColorfulStringBuilder:
 
                 fg_base_code = int(ANSI_TOKEN_MAP[fg_token][2:4])
                 if light:
-                    parts.append(f"\033[{fg_base_code + 60}m")
+                    parts.append(f"\033[2;{fg_base_code}m")
                 else:
                     parts.append(ANSI_TOKEN_MAP[fg_token])
 
@@ -264,6 +264,9 @@ class ColorfulStringBuilder:
                     bg_code = f"\033[{int(ANSI_TOKEN_MAP[bg_token][2:4]) + 10}m"
                     parts.append(bg_code)
                     token_end += 2
+
+                if token_end < len(value) and value[token_end] == "_":
+                    raise ValueError("underline marker '_' must be before foreground color")
 
                 i = token_end
                 continue
