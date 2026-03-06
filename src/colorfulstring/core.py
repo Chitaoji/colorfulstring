@@ -46,6 +46,7 @@ class ColorfulStringBuilder:
     def __init__(
         self,
         default_color: str = "",
+        light: bool = False,
         underlined: bool = False,
         string: str | None = None,
         status: tuple[bool, bool] | None = None,
@@ -56,6 +57,7 @@ class ColorfulStringBuilder:
 
         Args:
             default_color: Default color token applied to plain strings.
+            light: Whether foreground color should use the light/bright ANSI variant.
             underlined: Whether generated strings should apply underline formatting.
             string: Accumulated output string.
             status: Internal state for conditional chaining.
@@ -63,6 +65,7 @@ class ColorfulStringBuilder:
             printer: Optional side-effect callback invoked on generated fragments.
         """
         self._default_color = default_color
+        self._light = light
         self._underlined = underlined
         self._string = string
         self._status = status
@@ -155,6 +158,7 @@ class ColorfulStringBuilder:
         self,
         *,
         default_color: str = ...,
+        light: bool = ...,
         underlined: bool = ...,
         string: str | None = ...,
         status: tuple[bool, bool] | None = ...,
@@ -164,6 +168,7 @@ class ColorfulStringBuilder:
         """Return a cloned builder with selected fields overridden."""
         return self.__class__(
             self._default_color if default_color is Ellipsis else default_color,
+            self._light if light is Ellipsis else light,
             self._underlined if underlined is Ellipsis else underlined,
             self._string if string is Ellipsis else string,
             self._status if status is Ellipsis else status,
@@ -199,6 +204,11 @@ class ColorfulStringBuilder:
             else:
                 if (self._default_color or self._underlined) and string:
                     token = self._default_color
+                    if self._light and token:
+                        if "." in token:
+                            token = f"{token[0]}-{token[1:]}"
+                        else:
+                            token = f"{token}-"
                     if self._underlined:
                         token = f"_{token}"
                     string = f"${token}{string}$"
@@ -210,8 +220,8 @@ class ColorfulStringBuilder:
     def __render_ansi_tokens(self, value: str) -> str:
         """Translate `$TOKEN`/`$FG.BG` fragments to ANSI escape codes.
 
-        Underline can be toggled by wrapping the foreground token with `_`,
-        such as `$_B` or `$B_`.
+        Underline can be toggled by prefixing the foreground token with `_`,
+        such as `$_B` or `$_B-.G`.
         """
         parts: list[str] = []
         i = 0
@@ -231,13 +241,19 @@ class ColorfulStringBuilder:
             fg_token = value[token_start : token_start + 1].upper()
             if fg_token in ANSI_TOKEN_MAP:
                 token_end = token_start + 1
-                if token_end < len(value) and value[token_end] == "_":
-                    underlined = True
+                light = False
+                if token_end < len(value) and value[token_end] == "-":
+                    light = True
                     token_end += 1
 
                 if underlined:
                     parts.append("\033[4m")
-                parts.append(ANSI_TOKEN_MAP[fg_token])
+
+                fg_base_code = int(ANSI_TOKEN_MAP[fg_token][2:4])
+                if light:
+                    parts.append(f"\033[{fg_base_code + 60}m")
+                else:
+                    parts.append(ANSI_TOKEN_MAP[fg_token])
 
                 if (
                     token_end + 1 < len(value)
@@ -283,6 +299,11 @@ class ColorfulStringBuilder:
     def underline(self) -> Self:
         """Return a builder that applies underline formatting."""
         return self.copy(underlined=True)
+
+    @property
+    def light(self) -> Self:
+        """Return a builder that applies light/bright foreground color."""
+        return self.copy(light=True)
 
     @property
     def d(self) -> Self:
