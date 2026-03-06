@@ -197,7 +197,11 @@ class ColorfulStringBuilder:
         return string
 
     def __render_ansi_tokens(self, value: str) -> str:
-        """Translate `$TOKEN` and `$FG.BG` fragments to ANSI escape codes."""
+        """Translate `$TOKEN`/`$FG.BG` fragments to ANSI escape codes.
+
+        Underline can be toggled by wrapping the foreground token with `_`,
+        such as `$_B` or `$B_`.
+        """
         parts: list[str] = []
         i = 0
         while i < len(value):
@@ -206,21 +210,35 @@ class ColorfulStringBuilder:
                 i += 1
                 continue
 
-            if i + 3 < len(value) and value[i + 2] == ".":
-                fg_token = value[i + 1]
-                bg_token = value[i + 3]
-                if fg_token in ANSI_TOKEN_MAP and bg_token in ANSI_TOKEN_MAP:
-                    fg_code = ANSI_TOKEN_MAP[fg_token]
-                    bg_code = f"\033[{int(ANSI_TOKEN_MAP[bg_token][2:4]) + 10}m"
-                    parts.append(fg_code)
-                    parts.append(bg_code)
-                    i += 4
-                    continue
+            token_start = i + 1
+            underlined = False
 
-            token = value[i + 1 : i + 2]
-            if token in ANSI_TOKEN_MAP:
-                parts.append(ANSI_TOKEN_MAP[token])
-                i += 2
+            if token_start < len(value) and value[token_start] == "_":
+                underlined = True
+                token_start += 1
+
+            fg_token = value[token_start : token_start + 1].upper()
+            if fg_token in ANSI_TOKEN_MAP:
+                token_end = token_start + 1
+                if token_end < len(value) and value[token_end] == "_":
+                    underlined = True
+                    token_end += 1
+
+                if underlined:
+                    parts.append("\033[4m")
+                parts.append(ANSI_TOKEN_MAP[fg_token])
+
+                if (
+                    token_end + 1 < len(value)
+                    and value[token_end] == "."
+                    and value[token_end + 1].upper() in ANSI_TOKEN_MAP
+                ):
+                    bg_token = value[token_end + 1].upper()
+                    bg_code = f"\033[{int(ANSI_TOKEN_MAP[bg_token][2:4]) + 10}m"
+                    parts.append(bg_code)
+                    token_end += 2
+
+                i = token_end
                 continue
 
             parts.append("\033[0m")
