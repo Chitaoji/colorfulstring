@@ -10,6 +10,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from functools import partial
+import logging
 from typing import Any, Callable, Self
 
 __all__ = ["c"]
@@ -202,20 +203,43 @@ class ColorfulStringBuilder:
             if self._underlined and not self._default_color and string:
                 string = f"[4m{string}[0m"
             else:
-                if (self._default_color or self._underlined) and string:
-                    token = self._default_color
-                    if self._faint and token:
-                        if "." in token:
-                            token = f"{token[0]}-{token[1:]}"
-                        else:
-                            token = f"{token}-"
-                    if self._underlined:
-                        token = f"_{token}"
-                    string = f"${token}:{string}$"
-                string = self.__render_ansi_tokens(string)
+                has_inline_tokens = self.__contains_inline_token(string)
+                has_default_style = bool(self._default_color or self._underlined)
+                if has_inline_tokens and has_default_style:
+                    logging.warning(
+                        "inline token markup detected while default style is active; treating fragment as plain text: %r",
+                        string,
+                    )
+                else:
+                    if has_default_style and string:
+                        token = self._default_color
+                        if self._faint and token:
+                            if "." in token:
+                                token = f"{token[0]}-{token[1:]}"
+                            else:
+                                token = f"{token}-"
+                        if self._underlined:
+                            token = f"_{token}"
+                        string = f"${token}:{string}$"
+                    string = self.__render_ansi_tokens(string)
         if self._printer is not None:
             self._printer(string)
         return string
+
+    def __contains_inline_token(self, value: str) -> bool:
+        """Return whether the text includes at least one `$TOKEN:text$` fragment."""
+        i = 0
+        while i < len(value):
+            start = value.find("$", i)
+            if start < 0:
+                return False
+            end = value.find("$", start + 1)
+            if end < 0:
+                return False
+            if ":" in value[start + 1 : end]:
+                return True
+            i = end + 1
+        return False
 
     def __render_ansi_tokens(self, value: str) -> str:
         """Translate `$TOKEN:text$` fragments to ANSI escape codes.
