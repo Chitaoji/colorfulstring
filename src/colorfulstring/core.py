@@ -46,7 +46,7 @@ class ColorfulStringBuilder:
     def __init__(
         self,
         default_color: str = "",
-        light: bool = False,
+        faint: bool = False,
         underlined: bool = False,
         string: str | None = None,
         status: tuple[bool, bool] | None = None,
@@ -57,7 +57,7 @@ class ColorfulStringBuilder:
 
         Args:
             default_color: Default color token applied to plain strings.
-            light: Whether foreground color should use the light/bright ANSI variant.
+            faint: Whether foreground color should use the faint ANSI variant.
             underlined: Whether generated strings should apply underline formatting.
             string: Accumulated output string.
             status: Internal state for conditional chaining.
@@ -65,7 +65,7 @@ class ColorfulStringBuilder:
             printer: Optional side-effect callback invoked on generated fragments.
         """
         self._default_color = default_color
-        self._light = light
+        self._faint = faint
         self._underlined = underlined
         self._string = string
         self._status = status
@@ -158,7 +158,7 @@ class ColorfulStringBuilder:
         self,
         *,
         default_color: str = ...,
-        light: bool = ...,
+        faint: bool = ...,
         underlined: bool = ...,
         string: str | None = ...,
         status: tuple[bool, bool] | None = ...,
@@ -168,7 +168,7 @@ class ColorfulStringBuilder:
         """Return a cloned builder with selected fields overridden."""
         return self.__class__(
             self._default_color if default_color is Ellipsis else default_color,
-            self._light if light is Ellipsis else light,
+            self._faint if faint is Ellipsis else faint,
             self._underlined if underlined is Ellipsis else underlined,
             self._string if string is Ellipsis else string,
             self._status if status is Ellipsis else status,
@@ -204,7 +204,7 @@ class ColorfulStringBuilder:
             else:
                 if (self._default_color or self._underlined) and string:
                     token = self._default_color
-                    if self._light and token:
+                    if self._faint and token:
                         if "." in token:
                             token = f"{token[0]}-{token[1:]}"
                         else:
@@ -256,9 +256,9 @@ class ColorfulStringBuilder:
                 continue
 
             parsed_end = 1
-            light = False
+            faint = False
             if len(token) > parsed_end and token[parsed_end] == "-":
-                light = True
+                faint = True
                 parsed_end += 1
 
             bg_token = ""
@@ -287,7 +287,7 @@ class ColorfulStringBuilder:
                 parts.append("\033[4m")
 
             fg_base_code = int(ANSI_TOKEN_MAP[fg_token][2:4])
-            if light:
+            if faint:
                 parts.append(f"\033[2;{fg_base_code}m")
             else:
                 parts.append(ANSI_TOKEN_MAP[fg_token])
@@ -330,9 +330,9 @@ class ColorfulStringBuilder:
         return self.copy(underlined=True)
 
     @property
-    def light(self) -> Self:
-        """Return a builder that applies light/bright foreground color."""
-        return self.copy(light=True)
+    def faint(self) -> Self:
+        """Return a builder that applies faint foreground color."""
+        return self.copy(faint=True)
 
     @property
     def d(self) -> Self:
