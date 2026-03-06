@@ -62,13 +62,27 @@ line = c.print << "hello" << c.endl
 
 ### 5) Underline
 
-Use `.underline` to add underline style, and it can appear anywhere in the chain:
+Use `.underline` to add underline style; it must be placed before the foreground color in chained shortcuts:
 
 ```python
 print(c.underline << "plain underline")
-print(c.g.underline << "green underline")
-print(c.g.b.underline << "green on blue underline")
+print(c.underline.g << "green underline")
+print(c.underline.g.b << "green on blue underline")
 ```
+
+For inline tokens, underline must also be before foreground (for example: `$_B-.Gtext$`).
+
+### 6) Light/Bright Foreground
+
+Use `.light` to switch the foreground to its bright ANSI variant. It must follow the foreground color token.
+
+```python
+print(c.r.light << "bright red")
+print(c.g.light.b << "bright green on blue")
+```
+
+Inline token form uses `-` after the foreground token, e.g. `$B-` or `$_B-.G`.
+
 
 ## See Also
 ### Github repository
