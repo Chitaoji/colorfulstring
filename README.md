@@ -70,15 +70,15 @@ print(c.underline.g << "green underline")
 print(c.underline.g.b << "green on blue underline")
 ```
 
-For inline tokens, underline must also be before foreground (for example: `$_B-.Gtext$`).
+For inline tokens, underline must also be before foreground (for example: `$_B-.Gtext$`). Writing it after foreground like `$B_text$` is invalid and will raise `ValueError`.
 
-### 6) Light/Bright Foreground
+### 6) Light/Faint Foreground
 
-Use `.light` to switch the foreground to its bright ANSI variant. It must follow the foreground color token.
+Use `.light` to switch the foreground to a faint/light ANSI variant (`\033[2;COLORm`). It must follow the foreground color token.
 
 ```python
-print(c.r.light << "bright red")
-print(c.g.light.b << "bright green on blue")
+print(c.r.light << "faint red")
+print(c.g.light.b << "faint green on blue")
 ```
 
 Inline token form uses `-` after the foreground token, e.g. `$B-` or `$_B-.G`.
