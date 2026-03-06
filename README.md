@@ -35,12 +35,6 @@ print(c.y << "Warning")
 print(c.b.g << "Blue on green via chaining")
 ```
 
-```python
-print(c << "$B.GBlue on green$")
-print(c << "$D.YDark on yellow$")
-print(c.bg_blue << "Blue background preset")
-```
-
 ### 2) Pipe-Style Chaining
 
 Use `<<` (or `@`) to append fragments in sequence:

@@ -16,7 +16,6 @@ __all__ = ["c"]
 
 
 ANSI_TOKEN_MAP: dict[str, str] = {
-    # Foreground colors
     "D": "\033[30m",  # Dark/Black
     "R": "\033[31m",  # Red
     "G": "\033[32m",  # Green
@@ -290,46 +289,6 @@ class ColorfulStringBuilder:
     def w(self) -> Self:
         """Return a builder with white default color."""
         return self.__with_color_token("W")
-
-    @property
-    def bg_black(self) -> Self:
-        """Return a builder with default `W.D` (white on black)."""
-        return self.copy(default_color="W.D")
-
-    @property
-    def bg_red(self) -> Self:
-        """Return a builder with default `W.R` (white on red)."""
-        return self.copy(default_color="W.R")
-
-    @property
-    def bg_green(self) -> Self:
-        """Return a builder with default `W.G` (white on green)."""
-        return self.copy(default_color="W.G")
-
-    @property
-    def bg_yellow(self) -> Self:
-        """Return a builder with default `D.Y` (dark on yellow)."""
-        return self.copy(default_color="D.Y")
-
-    @property
-    def bg_blue(self) -> Self:
-        """Return a builder with default `W.B` (white on blue)."""
-        return self.copy(default_color="W.B")
-
-    @property
-    def bg_purple(self) -> Self:
-        """Return a builder with default `W.P` (white on purple)."""
-        return self.copy(default_color="W.P")
-
-    @property
-    def bg_cyan(self) -> Self:
-        """Return a builder with default `D.C` (dark on cyan)."""
-        return self.copy(default_color="D.C")
-
-    @property
-    def bg_white(self) -> Self:
-        """Return a builder with default `D.W` (dark on white)."""
-        return self.copy(default_color="D.W")
 
 
 c = ColorfulStringBuilder()
