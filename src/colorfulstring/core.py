@@ -46,6 +46,7 @@ class ColorfulStringBuilder:
     def __init__(
         self,
         default_color: str = "",
+        underlined: bool = False,
         string: str | None = None,
         status: tuple[bool, bool] | None = None,
         receiver: Self | _DefaultReceiver = _DefaultReceiver(),
@@ -55,12 +56,14 @@ class ColorfulStringBuilder:
 
         Args:
             default_color: Default color token applied to plain strings.
+            underlined: Whether generated strings should apply underline formatting.
             string: Accumulated output string.
             status: Internal state for conditional chaining.
             receiver: Target builder used by conditional chains.
             printer: Optional side-effect callback invoked on generated fragments.
         """
         self._default_color = default_color
+        self._underlined = underlined
         self._string = string
         self._status = status
         self._receiver = receiver
@@ -152,6 +155,7 @@ class ColorfulStringBuilder:
         self,
         *,
         default_color: str = ...,
+        underlined: bool = ...,
         string: str | None = ...,
         status: tuple[bool, bool] | None = ...,
         receiver: Self | _DefaultReceiver = ...,
@@ -160,6 +164,7 @@ class ColorfulStringBuilder:
         """Return a cloned builder with selected fields overridden."""
         return self.__class__(
             self._default_color if default_color is Ellipsis else default_color,
+            self._underlined if underlined is Ellipsis else underlined,
             self._string if string is Ellipsis else string,
             self._status if status is Ellipsis else status,
             self._receiver if receiver is Ellipsis else receiver,
@@ -189,9 +194,15 @@ class ColorfulStringBuilder:
             string = str(obj)
         else:
             string = str(obj)
-            if self._default_color and string:
-                string = f"${self._default_color}{string}$"
-            string = self.__render_ansi_tokens(string)
+            if self._underlined and not self._default_color and string:
+                string = f"[4m{string}[0m"
+            else:
+                if (self._default_color or self._underlined) and string:
+                    token = self._default_color
+                    if self._underlined:
+                        token = f"_{token}"
+                    string = f"${token}{string}$"
+                string = self.__render_ansi_tokens(string)
         if self._printer is not None:
             self._printer(string)
         return string
@@ -267,6 +278,11 @@ class ColorfulStringBuilder:
         if "." not in self._default_color:
             return self.copy(default_color=f"{self._default_color}.{token}")
         raise ValueError("only two chained colors are supported, e.g. c.b.g")
+
+    @property
+    def underline(self) -> Self:
+        """Return a builder that applies underline formatting."""
+        return self.copy(underlined=True)
 
     @property
     def d(self) -> Self:
