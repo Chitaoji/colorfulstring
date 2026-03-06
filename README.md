@@ -83,7 +83,28 @@ print(c.g.faint.b << "faint green on blue")
 
 ### 7) Inline Token Grammar
 
+Besides fluent chaining, `colorfulstring` can also parse inline token fragments from plain strings:
 
+```python
+print(c("$R:error$"))
+print(c("$G-.B:faint green on blue$"))
+print(c("$_Y:underlined yellow$"))
+```
+
+Grammar (inside `$...$`):
+
+- `TOKEN:text`
+- `TOKEN`:
+  - `FG` (foreground), e.g. `R`, `G`, `B`
+  - `FG-` (faint foreground)
+  - `FG.BG` (foreground + background)
+  - `FG-.BG` (faint foreground + background)
+  - optional underline prefix: `_${TOKEN}`
+
+Escaping:
+
+- `$$` becomes a literal `$`.
+- Non-token fragments keep their original form, e.g. `$hello$` stays `$hello$`.
 
 ## See Also
 ### Github repository
