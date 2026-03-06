@@ -101,7 +101,7 @@ Grammar (inside `$...$`):
 
 Escaping:
 
-- Non-token fragments keep their original form, e.g. `$hello$` stays `$hello$`.
+- Non-token fragments are not wrapped, e.g. `$hello$` stays unwrapped.
 
 ## See Also
 ### Github repository
