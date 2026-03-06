@@ -10,8 +10,9 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from functools import partial
-import logging
 from typing import Any, Callable, Self
+
+import loggings
 
 __all__ = ["c"]
 
@@ -206,9 +207,12 @@ class ColorfulStringBuilder:
                 has_inline_tokens = self.__contains_inline_token(string)
                 has_default_style = bool(self._default_color or self._underlined)
                 if has_inline_tokens and has_default_style:
-                    logging.warning(
-                        "inline token markup detected while default style is active; treating fragment as plain text: %r",
+                    loggings.warning(
+                        "inline token markup detected while default style is active; "
+                        "treating fragment as plain text: %r",
                         string,
+                        line_info=True,
+                        stacklevel=4,
                     )
                 else:
                     if has_default_style and string:
