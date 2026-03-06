@@ -70,8 +70,6 @@ print(c.underline.g << "green underline")
 print(c.underline.g.b << "green on blue underline")
 ```
 
-
-
 ### 6) Light/Faint Foreground
 
 Use `.faint` to switch the foreground to a faint ANSI variant (`\033[2;COLORm`). It must follow the foreground color token.
@@ -103,7 +101,6 @@ Grammar (inside `$...$`):
 
 Escaping:
 
-- `$$` becomes a literal `$`.
 - Non-token fragments keep their original form, e.g. `$hello$` stays `$hello$`.
 
 ## See Also
