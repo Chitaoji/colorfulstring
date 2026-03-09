@@ -121,7 +121,6 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.0.3
-* Added color/style token grammar documentation (`FG-`, `FG.BG`, `FG-.BG`, `_{TOKEN}`).
 * Now correctly handles escaped dollar sequences like `$$` in inline token parsing.
 * Improved README structure and polished API usage descriptions.
 
