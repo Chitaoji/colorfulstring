@@ -12,7 +12,21 @@ NOTE: this module is private. All functions and objects are available in the mai
 from functools import partial
 from typing import Any, Callable, Self
 
+import loggings
+
 __all__ = ["c"]
+
+
+ANSI_TOKEN_MAP: dict[str, str] = {
+    "D": "\033[30m",  # Dark/Black
+    "R": "\033[31m",  # Red
+    "G": "\033[32m",  # Green
+    "Y": "\033[33m",  # Yellow
+    "B": "\033[34m",  # Blue
+    "P": "\033[35m",  # Purple
+    "C": "\033[36m",  # Cyan
+    "W": "\033[37m",  # White
+}
 
 
 class _DefaultReceiver:
@@ -34,6 +48,8 @@ class ColorfulStringBuilder:
     def __init__(
         self,
         default_color: str = "",
+        faint: bool = False,
+        underlined: bool = False,
         string: str | None = None,
         status: tuple[bool, bool] | None = None,
         receiver: Self | _DefaultReceiver = _DefaultReceiver(),
@@ -43,12 +59,16 @@ class ColorfulStringBuilder:
 
         Args:
             default_color: Default color token applied to plain strings.
+            faint: Whether foreground color should use the faint ANSI variant.
+            underlined: Whether generated strings should apply underline formatting.
             string: Accumulated output string.
             status: Internal state for conditional chaining.
             receiver: Target builder used by conditional chains.
             printer: Optional side-effect callback invoked on generated fragments.
         """
         self._default_color = default_color
+        self._faint = faint
+        self._underlined = underlined
         self._string = string
         self._status = status
         self._receiver = receiver
@@ -140,6 +160,8 @@ class ColorfulStringBuilder:
         self,
         *,
         default_color: str = ...,
+        faint: bool = ...,
+        underlined: bool = ...,
         string: str | None = ...,
         status: tuple[bool, bool] | None = ...,
         receiver: Self | _DefaultReceiver = ...,
@@ -148,6 +170,8 @@ class ColorfulStringBuilder:
         """Return a cloned builder with selected fields overridden."""
         return self.__class__(
             self._default_color if default_color is Ellipsis else default_color,
+            self._faint if faint is Ellipsis else faint,
+            self._underlined if underlined is Ellipsis else underlined,
             self._string if string is Ellipsis else string,
             self._status if status is Ellipsis else status,
             self._receiver if receiver is Ellipsis else receiver,
@@ -177,22 +201,134 @@ class ColorfulStringBuilder:
             string = str(obj)
         else:
             string = str(obj)
-            if self._default_color and string:
-                string = f"${self._default_color}{string}$"
-            string = (
-                string.replace("$D", "\033[30m")  # Dark
-                .replace("$R", "\033[31m")  # Red
-                .replace("$G", "\033[32m")  # Green
-                .replace("$Y", "\033[33m")  # Yellow
-                .replace("$B", "\033[34m")  # Blue
-                .replace("$P", "\033[35m")  # Purple
-                .replace("$C", "\033[36m")  # Cyan
-                .replace("$W", "\033[37m")  # White
-                .replace("$", "\033[0m")
-            )
+            if self._underlined and not self._default_color and string:
+                string = f"[4m{string}[0m"
+            else:
+                has_inline_tokens = self.__contains_inline_token(string)
+                has_default_style = bool(self._default_color or self._underlined)
+                if has_inline_tokens and has_default_style:
+                    loggings.warning(
+                        "inline token markup detected while default style is active; "
+                        "treating fragment as plain text: %r",
+                        string,
+                        line_info=True,
+                        stacklevel=4,
+                    )
+                else:
+                    if has_default_style and string:
+                        token = self._default_color
+                        if self._faint and token:
+                            if "." in token:
+                                token = f"{token[0]}-{token[1:]}"
+                            else:
+                                token = f"{token}-"
+                        if self._underlined:
+                            token = f"_{token}"
+                        string = f"${token}:{string}$"
+                    string = self.__render_ansi_tokens(string)
         if self._printer is not None:
             self._printer(string)
         return string
+
+    def __contains_inline_token(self, value: str) -> bool:
+        """Return whether the text includes at least one `$TOKEN:text$` fragment."""
+        i = 0
+        while i < len(value):
+            start = value.find("$", i)
+            if start < 0:
+                return False
+            end = value.find("$", start + 1)
+            if end < 0:
+                return False
+            if ":" in value[start + 1 : end]:
+                return True
+            i = end + 1
+        return False
+
+    def __render_ansi_tokens(self, value: str) -> str:
+        """Translate `$TOKEN:text$` fragments to ANSI escape codes.
+
+        Valid inline format is `$TOKEN:text$` where `TOKEN` is `FG`, `FG-`,
+        `FG.BG`, `FG-.BG`, and can optionally be prefixed by `_` for underline.
+        Fragments without `:` are treated as plain text between `$...$`.
+        """
+        parts: list[str] = []
+        i = 0
+        while i < len(value):
+            if value[i] != "$":
+                parts.append(value[i])
+                i += 1
+                continue
+
+            token_end = value.find("$", i + 1)
+            if token_end < 0:
+                parts.append("$")
+                i += 1
+                continue
+
+            fragment = value[i + 1 : token_end]
+            if ":" not in fragment:
+                parts.append(fragment)
+                i = token_end + 1
+                continue
+
+            token, text = fragment.split(":", 1)
+            underlined = token.startswith("_")
+            if underlined:
+                token = token[1:]
+
+            fg_token = token[:1].upper()
+            if fg_token not in ANSI_TOKEN_MAP:
+                parts.append(fragment)
+                i = token_end + 1
+                continue
+
+            parsed_end = 1
+            faint = False
+            if len(token) > parsed_end and token[parsed_end] == "-":
+                faint = True
+                parsed_end += 1
+
+            bg_token = ""
+            if len(token) > parsed_end and token[parsed_end] == ".":
+                if len(token) <= parsed_end + 1:
+                    parts.append(fragment)
+                    i = token_end + 1
+                    continue
+                bg_token = token[parsed_end + 1 : parsed_end + 2].upper()
+                if bg_token not in ANSI_TOKEN_MAP:
+                    parts.append(fragment)
+                    i = token_end + 1
+                    continue
+                parsed_end += 2
+
+            if parsed_end != len(token):
+                if "_" in token:
+                    raise ValueError(
+                        "underline marker '_' must be before foreground color"
+                    )
+                parts.append(fragment)
+                i = token_end + 1
+                continue
+
+            if underlined:
+                parts.append("\033[4m")
+
+            fg_base_code = int(ANSI_TOKEN_MAP[fg_token][2:4])
+            if faint:
+                parts.append(f"\033[2;{fg_base_code}m")
+            else:
+                parts.append(ANSI_TOKEN_MAP[fg_token])
+
+            if bg_token:
+                bg_code = f"\033[{int(ANSI_TOKEN_MAP[bg_token][2:4]) + 10}m"
+                parts.append(bg_code)
+
+            parts.append(text)
+            parts.append("\033[0m")
+            i = token_end + 1
+
+        return "".join(parts)
 
     def __asstr(self) -> str:
         """Get accumulated output or an empty string."""
@@ -208,45 +344,63 @@ class ColorfulStringBuilder:
         """Return a newline fragment."""
         return ColorfulStringBuilder(string="\n")
 
+    def __with_color_token(self, token: str) -> Self:
+        """Set foreground token or one background token (at most two chained colors)."""
+        if not self._default_color:
+            return self.copy(default_color=token)
+        if "." not in self._default_color:
+            return self.copy(default_color=f"{self._default_color}.{token}")
+        raise ValueError("only two chained colors are supported, e.g. c.b.g")
+
+    @property
+    def underline(self) -> Self:
+        """Return a builder that applies underline formatting."""
+        return self.copy(underlined=True)
+
+    @property
+    def faint(self) -> Self:
+        """Return a builder that applies faint foreground color."""
+        return self.copy(faint=True)
+
     @property
     def d(self) -> Self:
         """Return a builder with dark/black default color."""
-        return self.copy(default_color="D")
+        return self.__with_color_token("D")
 
     @property
     def r(self) -> Self:
         """Return a builder with red default color."""
-        return self.copy(default_color="R")
+        return self.__with_color_token("R")
 
     @property
     def g(self) -> Self:
         """Return a builder with green default color."""
-        return self.copy(default_color="G")
+        return self.__with_color_token("G")
 
     @property
     def y(self) -> Self:
         """Return a builder with yellow default color."""
-        return self.copy(default_color="Y")
+        return self.__with_color_token("Y")
 
     @property
     def b(self) -> Self:
         """Return a builder with blue default color."""
-        return self.copy(default_color="B")
+        return self.__with_color_token("B")
 
     @property
     def p(self) -> Self:
         """Return a builder with purple default color."""
-        return self.copy(default_color="P")
+        return self.__with_color_token("P")
 
     @property
     def c(self) -> Self:
         """Return a builder with cyan default color."""
-        return self.copy(default_color="C")
+        return self.__with_color_token("C")
 
     @property
     def w(self) -> Self:
         """Return a builder with white default color."""
-        return self.copy(default_color="W")
+        return self.__with_color_token("W")
 
 
 c = ColorfulStringBuilder()

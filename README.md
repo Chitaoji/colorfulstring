@@ -20,10 +20,15 @@ print(c.g("OK"))
 
 ### 1) Color Shortcuts
 
-Available color properties are `d/r/g/y/b/p/c/w`, which map to dark, red, green, yellow, blue, purple, cyan, and white.
+Available shortcut color properties are `d/r/g/y/b/p/c/w` (dark/red/green/yellow/blue/purple/cyan/white).
+
+You can chain them for background presets, e.g. `c.b.g` means blue foreground + green background.
+
+Chaining is limited to two colors; `c.b.g.g` is not allowed.
 
 ```python
 print(c.y << "Warning")
+print(c.b.g << "Blue on green via chaining")
 ```
 
 ### 2) Pipe-Style Chaining
@@ -55,6 +60,53 @@ print(line)
 line = c.print << "hello" << c.endl
 ```
 
+### 5) Underline
+
+Use `.underline` to add underline style:
+
+```python
+print(c.underline << "plain underline")
+print(c.underline.g << "green underline")
+print(c.underline.g.b << "green on blue underline")
+```
+
+### 6) Faint Foreground
+
+Use `.faint` to switch the foreground to a faint ANSI variant. It must follow the foreground color token.
+
+```python
+print(c.r.faint << "faint red")
+print(c.g.faint.b << "faint green on blue")
+```
+
+Note: 
+
+- `c.faint` is no different from `c`, if you need a faint dark color, try `c.d.faint`. 
+
+### 7) Inline Token Grammar
+
+Besides fluent chaining, `colorfulstring` can also parse inline token fragments from plain strings:
+
+```python
+print(c("$R:error$"))
+print(c("$G-.B:faint green on blue$"))
+print(c("$_Y:underlined yellow$"))
+```
+
+Grammar (inside `$...$`):
+
+- `TOKEN:text`
+- `TOKEN`:
+  - `FG` (foreground), e.g. `R`, `G`, `B`
+  - `FG-` (faint foreground)
+  - `FG.BG` (foreground + background)
+  - `FG-.BG` (faint foreground + background)
+  - optional underline prefix: `_{TOKEN}`
+
+Escaping:
+
+- Non-token fragments are not colored, e.g. `$hello$`.
+
 ## See Also
 ### Github repository
 * https://github.com/Chitaoji/colorfulstring/
@@ -67,6 +119,11 @@ line = c.print << "hello" << c.endl
 BSD 3-Clause License.
 
 ## History
+### v0.0.2
+* Added inline token grammar support (`$TOKEN:text$`) to render ANSI styles directly from plain strings.
+* Added `.underline` and `.faint` style modifiers, including combinations with foreground/background colors.
+* Improved chaining/conditional flow documentation and examples (`iftrue`, `ifnot`, `ifelse`, `<<`, `@`).
+
 ### v0.0.1
 * Renamed `ColorfulString` to `ColorfulStringBuilder` to avoid conflicts.
 
