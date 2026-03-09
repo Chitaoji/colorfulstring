@@ -116,7 +116,7 @@ Escaping:
 
 
 ## License
-BSD 3-Clause License.
+This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.0.2
