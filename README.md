@@ -106,6 +106,7 @@ Grammar (inside `$...$`):
 Escaping:
 
 - Non-token fragments unwrap as plain text, e.g. `$hello$` -> `hello`, and `$$` -> `$`.
+- Inline token grammar is parsed only from input strings (e.g. `c("$R:error$")`); fluent builders like `c.g` do not accept `$TOKEN:text$` as property syntax.
 
 ## See Also
 ### Github repository
@@ -120,6 +121,9 @@ This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.0.3
+* Added color/style token grammar documentation (`FG-`, `FG.BG`, `FG-.BG`, `_{TOKEN}`).
+* Now correctly handles escaped dollar sequences like `$$` in inline token parsing.
+* Improved README structure and polished API usage descriptions.
 
 ### v0.0.2
 * Added inline token grammar support (`$TOKEN:text$`) to render ANSI styles directly from plain strings.
