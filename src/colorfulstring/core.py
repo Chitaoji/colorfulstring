@@ -206,24 +206,6 @@ class ColorfulStringBuilder:
             else:
                 has_default_style = bool(self._default_color or self._underlined)
                 if has_default_style and string:
-                    i = 0
-                    has_single_dollar = False
-                    while i < len(string):
-                        if string[i] != "$":
-                            i += 1
-                            continue
-                        if i + 1 < len(string) and string[i + 1] == "$":
-                            i += 2
-                            continue
-                        has_single_dollar = True
-                        break
-                    if has_single_dollar:
-                        loggings.warning(
-                            "detected literal '$' characters while default style is "
-                            "active; escaping them as plain text",
-                            stacklevel=4,
-                            line_info=True,
-                        )
                     string = string.replace("$", "$$")
                     token = self._default_color
                     if self._faint and token:
