@@ -210,7 +210,21 @@ class ColorfulStringBuilder:
                     # Escape literal '$' in user text before wrapping with a
                     # style token, otherwise an unmatched '$' can interfere
                     # with the generated `$TOKEN:...$` boundaries.
-                    loggings.warning("")
+                    i = 0
+                    has_single_dollar = False
+                    while i < len(string):
+                        if string[i] != "$":
+                            i += 1
+                            continue
+                        if i + 1 < len(string) and string[i + 1] == "$":
+                            i += 2
+                            continue
+                        has_single_dollar = True
+                        break
+                    if has_single_dollar:
+                        loggings.warning(
+                            "Detected literal '$' characters while default style is active; escaping them as plain text."
+                        )
                     string = string.replace("$", "$$")
                     token = self._default_color
                     if self._faint and token:
