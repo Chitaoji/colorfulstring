@@ -254,13 +254,29 @@ class ColorfulStringBuilder:
                 i += 1
                 continue
 
-            token_end = value.find("$", i + 1)
+            fragment_parts: list[str] = []
+            token_end = -1
+            j = i + 1
+            while j < len(value):
+                if value[j] != "$":
+                    fragment_parts.append(value[j])
+                    j += 1
+                    continue
+
+                if j + 1 < len(value) and value[j + 1] == "$":
+                    fragment_parts.append("$")
+                    j += 2
+                    continue
+
+                token_end = j
+                break
+
             if token_end < 0:
                 parts.append("$")
                 i += 1
                 continue
 
-            fragment = value[i + 1 : token_end]
+            fragment = "".join(fragment_parts)
             if ":" not in fragment:
                 parts.append("$" if fragment == "" else fragment)
                 i = token_end + 1
