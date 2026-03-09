@@ -122,7 +122,6 @@ BSD 3-Clause License.
 ### v0.0.2
 * Added inline token grammar support (`$TOKEN:text$`) to render ANSI styles directly from plain strings.
 * Added `.underline` and `.faint` style modifiers, including combinations with foreground/background colors.
-* Added `c.print` and `c.endl` helpers for immediate output and explicit newline fragments.
 * Improved chaining/conditional flow documentation and examples (`iftrue`, `ifnot`, `ifelse`, `<<`, `@`).
 
 ### v0.0.1
