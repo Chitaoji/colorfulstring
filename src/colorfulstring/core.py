@@ -14,7 +14,6 @@ from typing import Any, Callable, Self
 
 import loggings
 
-
 __all__ = ["c"]
 
 
@@ -207,9 +206,6 @@ class ColorfulStringBuilder:
             else:
                 has_default_style = bool(self._default_color or self._underlined)
                 if has_default_style and string:
-                    # Escape literal '$' in user text before wrapping with a
-                    # style token, otherwise an unmatched '$' can interfere
-                    # with the generated `$TOKEN:...$` boundaries.
                     i = 0
                     has_single_dollar = False
                     while i < len(string):
@@ -223,7 +219,10 @@ class ColorfulStringBuilder:
                         break
                     if has_single_dollar:
                         loggings.warning(
-                            "Detected literal '$' characters while default style is active; escaping them as plain text."
+                            "detected literal '$' characters while default style is "
+                            "active; escaping them as plain text",
+                            stacklevel=4,
+                            line_info=True,
                         )
                     string = string.replace("$", "$$")
                     token = self._default_color
