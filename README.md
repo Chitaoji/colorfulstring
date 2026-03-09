@@ -119,6 +119,8 @@ Escaping:
 BSD 3-Clause License.
 
 ## History
+### v0.0.2
+
 ### v0.0.1
 * Renamed `ColorfulString` to `ColorfulStringBuilder` to avoid conflicts.
 
