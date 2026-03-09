@@ -268,7 +268,7 @@ class ColorfulStringBuilder:
 
             fragment = value[i + 1 : token_end]
             if ":" not in fragment:
-                parts.append(fragment)
+                parts.append("$" if fragment == "" else fragment)
                 i = token_end + 1
                 continue
 
