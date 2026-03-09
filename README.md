@@ -119,6 +119,8 @@ Escaping:
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.0.3
+
 ### v0.0.2
 * Added inline token grammar support (`$TOKEN:text$`) to render ANSI styles directly from plain strings.
 * Added `.underline` and `.faint` style modifiers, including combinations with foreground/background colors.
