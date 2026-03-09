@@ -204,46 +204,22 @@ class ColorfulStringBuilder:
             if self._underlined and not self._default_color and string:
                 string = f"[4m{string}[0m"
             else:
-                has_inline_tokens = self.__contains_inline_token(string)
                 has_default_style = bool(self._default_color or self._underlined)
-                if has_inline_tokens and has_default_style:
-                    loggings.warning(
-                        "inline token markup detected while default style is active; "
-                        "treating fragment as plain text: %r",
-                        string,
-                        line_info=True,
-                        stacklevel=4,
-                    )
-                else:
-                    if has_default_style and string:
-                        token = self._default_color
-                        if self._faint and token:
-                            if "." in token:
-                                token = f"{token[0]}-{token[1:]}"
-                            else:
-                                token = f"{token}-"
-                        if self._underlined:
-                            token = f"_{token}"
-                        string = f"${token}:{string}$"
-                    string = self.__render_ansi_tokens(string)
+                if has_default_style and string:
+                    string = string.replace("$", "$$")
+                    token = self._default_color
+                    if self._faint and token:
+                        if "." in token:
+                            token = f"{token[0]}-{token[1:]}"
+                        else:
+                            token = f"{token}-"
+                    if self._underlined:
+                        token = f"_{token}"
+                    string = f"${token}:{string}$"
+                string = self.__render_ansi_tokens(string)
         if self._printer is not None:
             self._printer(string)
         return string
-
-    def __contains_inline_token(self, value: str) -> bool:
-        """Return whether the text includes at least one `$TOKEN:text$` fragment."""
-        i = 0
-        while i < len(value):
-            start = value.find("$", i)
-            if start < 0:
-                return False
-            end = value.find("$", start + 1)
-            if end < 0:
-                return False
-            if ":" in value[start + 1 : end]:
-                return True
-            i = end + 1
-        return False
 
     def __render_ansi_tokens(self, value: str) -> str:
         """Translate `$TOKEN:text$` fragments to ANSI escape codes.
@@ -260,15 +236,31 @@ class ColorfulStringBuilder:
                 i += 1
                 continue
 
-            token_end = value.find("$", i + 1)
+            fragment_parts: list[str] = []
+            token_end = -1
+            j = i + 1
+            while j < len(value):
+                if value[j] != "$":
+                    fragment_parts.append(value[j])
+                    j += 1
+                    continue
+
+                if j + 1 < len(value) and value[j + 1] == "$":
+                    fragment_parts.append("$")
+                    j += 2
+                    continue
+
+                token_end = j
+                break
+
             if token_end < 0:
                 parts.append("$")
                 i += 1
                 continue
 
-            fragment = value[i + 1 : token_end]
+            fragment = "".join(fragment_parts)
             if ":" not in fragment:
-                parts.append(fragment)
+                parts.append("$" if fragment == "" else fragment)
                 i = token_end + 1
                 continue
 
