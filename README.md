@@ -121,6 +121,9 @@ Escaping:
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.0.5
+
+
 ### v0.0.4
 * Removed unnecessary imports.
 
