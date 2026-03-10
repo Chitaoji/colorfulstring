@@ -227,6 +227,7 @@ class ColorfulStringBuilder:
         Fragments without `:` are treated as plain text between `$...$`.
         """
         parts: list[str] = []
+        active_styles: list[str] = []
         i = 0
         while i < len(value):
             if value[i] != "$":
@@ -234,91 +235,109 @@ class ColorfulStringBuilder:
                 i += 1
                 continue
 
+            if i + 1 < len(value) and value[i + 1] == "$":
+                parts.append("$")
+                i += 2
+                continue
+
+            parsed = self.__parse_inline_token(value, i + 1)
+            if parsed is not None:
+                style_prefix, i = parsed
+                parts.append(style_prefix)
+                active_styles.append(style_prefix)
+                continue
+
+            if active_styles:
+                active_styles.pop()
+                parts.append("\x1b[0m")
+                if active_styles:
+                    parts.append("".join(active_styles))
+                i += 1
+                continue
+
             fragment_parts: list[str] = []
-            token_end = -1
             j = i + 1
             while j < len(value):
                 if value[j] != "$":
                     fragment_parts.append(value[j])
                     j += 1
                     continue
-
                 if j + 1 < len(value) and value[j + 1] == "$":
                     fragment_parts.append("$")
                     j += 2
                     continue
-
-                token_end = j
                 break
 
-            if token_end < 0:
+            if j >= len(value):
                 parts.append("$")
                 i += 1
                 continue
 
             fragment = "".join(fragment_parts)
-            if ":" not in fragment:
-                parts.append("$" if fragment == "" else fragment)
-                i = token_end + 1
-                continue
-
-            token, text = fragment.split(":", 1)
-            underlined = token.startswith("_")
-            if underlined:
-                token = token[1:]
-
-            fg_token = token[:1].upper()
-            if fg_token not in ANSI_TOKEN_COLORS:
-                parts.append(fragment)
-                i = token_end + 1
-                continue
-
-            parsed_end = 1
-            faint = False
-            if len(token) > parsed_end and token[parsed_end] == "-":
-                faint = True
-                parsed_end += 1
-
-            bg_token = ""
-            if len(token) > parsed_end and token[parsed_end] == ".":
-                if len(token) <= parsed_end + 1:
-                    parts.append(fragment)
-                    i = token_end + 1
-                    continue
-                bg_token = token[parsed_end + 1 : parsed_end + 2].upper()
-                if bg_token not in ANSI_TOKEN_COLORS:
-                    parts.append(fragment)
-                    i = token_end + 1
-                    continue
-                parsed_end += 2
-
-            if parsed_end != len(token):
-                if "_" in token:
-                    raise ValueError(
-                        "underline marker '_' must be before foreground color"
-                    )
-                parts.append(fragment)
-                i = token_end + 1
-                continue
-
-            if underlined:
-                parts.append("\x1b[4m")
-
-            fg_base_code = int(ANSI_TOKEN_COLORS[fg_token][2:4])
-            if faint:
-                parts.append(f"\x1b[2;{fg_base_code}m")
-            else:
-                parts.append(ANSI_TOKEN_COLORS[fg_token])
-
-            if bg_token:
-                bg_code = f"\x1b[{int(ANSI_TOKEN_COLORS[bg_token][2:4]) + 10}m"
-                parts.append(bg_code)
-
-            parts.append(text)
-            parts.append("\x1b[0m")
-            i = token_end + 1
+            parts.append("$" if fragment == "" else fragment)
+            i = j + 1
 
         return "".join(parts)
+
+    def __parse_inline_token(self, value: str, start: int) -> tuple[str, int] | None:
+        """Parse a token starting at ``start`` (right after ``$``)."""
+        token_chars: list[str] = []
+        j = start
+        while j < len(value):
+            if value[j] == ":":
+                break
+            if value[j] == "$":
+                return None
+            token_chars.append(value[j])
+            j += 1
+
+        if j >= len(value) or value[j] != ":":
+            return None
+
+        token = "".join(token_chars)
+        underlined = token.startswith("_")
+        if underlined:
+            token = token[1:]
+
+        fg_token = token[:1].upper()
+        if fg_token not in ANSI_TOKEN_COLORS:
+            return None
+
+        parsed_end = 1
+        faint = False
+        if len(token) > parsed_end and token[parsed_end] == "-":
+            faint = True
+            parsed_end += 1
+
+        bg_token = ""
+        if len(token) > parsed_end and token[parsed_end] == ".":
+            if len(token) <= parsed_end + 1:
+                return None
+            bg_token = token[parsed_end + 1 : parsed_end + 2].upper()
+            if bg_token not in ANSI_TOKEN_COLORS:
+                return None
+            parsed_end += 2
+
+        if parsed_end != len(token):
+            if "_" in token:
+                raise ValueError("underline marker '_' must be before foreground color")
+            return None
+
+        prefix_parts: list[str] = []
+        if underlined:
+            prefix_parts.append("\x1b[4m")
+
+        fg_base_code = int(ANSI_TOKEN_COLORS[fg_token][2:4])
+        if faint:
+            prefix_parts.append(f"\x1b[2;{fg_base_code}m")
+        else:
+            prefix_parts.append(ANSI_TOKEN_COLORS[fg_token])
+
+        if bg_token:
+            bg_code = f"\x1b[{int(ANSI_TOKEN_COLORS[bg_token][2:4]) + 10}m"
+            prefix_parts.append(bg_code)
+
+        return "".join(prefix_parts), j + 1
 
     def __asstr(self) -> str:
         """Get accumulated output or an empty string."""
