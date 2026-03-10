@@ -15,15 +15,15 @@ from typing import Any, Callable, Self
 __all__ = ["c"]
 
 
-ANSI_TOKEN_MAP: dict[str, str] = {
-    "D": "\033[30m",  # Dark/Black
-    "R": "\033[31m",  # Red
-    "G": "\033[32m",  # Green
-    "Y": "\033[33m",  # Yellow
-    "B": "\033[34m",  # Blue
-    "P": "\033[35m",  # Purple
-    "C": "\033[36m",  # Cyan
-    "W": "\033[37m",  # White
+ANSI_TOKEN_COLORS: dict[str, str] = {
+    "D": "\x1b[30m",  # Dark/Black
+    "R": "\x1b[31m",  # Red
+    "G": "\x1b[32m",  # Green
+    "Y": "\x1b[33m",  # Yellow
+    "B": "\x1b[34m",  # Blue
+    "P": "\x1b[35m",  # Purple
+    "C": "\x1b[36m",  # Cyan
+    "W": "\x1b[37m",  # White
 }
 
 
@@ -125,7 +125,7 @@ class ColorfulStringBuilder:
             `(c.r << "42") >> int`
         """
         if self._status is None and self._string is not None:
-            return obj(self._string)
+            return obj(repr(self))
         raise ValueError(f"nothing to convert to {obj}")
 
     def __matmul__(self, obj: str | Self | Any) -> Self:
@@ -200,10 +200,11 @@ class ColorfulStringBuilder:
         else:
             string = str(obj)
             if self._underlined and not self._default_color and string:
-                string = f"[4m{string}[0m"
+                string = f"\x1b[4m{string}\x1b[0m"
             else:
                 has_default_style = bool(self._default_color or self._underlined)
                 if has_default_style and string:
+                    string = self.__render_ansi_tokens(string)
                     string = string.replace("$", "$$")
                     token = self._default_color
                     if self._faint and token:
@@ -214,9 +215,9 @@ class ColorfulStringBuilder:
                     if self._underlined:
                         token = f"_{token}"
                     string = f"${token}:{string}$"
-                string = self.__render_ansi_tokens(string)
+            string = self.__render_ansi_tokens(string)
         if self._printer is not None:
-            self._printer(string)
+            self._printer(repr(self.copy(string=string, status=None)))
         return string
 
     def __render_ansi_tokens(self, value: str) -> str:
@@ -224,9 +225,9 @@ class ColorfulStringBuilder:
 
         Valid inline format is `$TOKEN:text$` where `TOKEN` is `FG`, `FG-`,
         `FG.BG`, `FG-.BG`, and can optionally be prefixed by `_` for underline.
-        Fragments without `:` are treated as plain text between `$...$`.
         """
         parts: list[str] = []
+        active_styles: list[tuple[str, str, int]] = []
         i = 0
         while i < len(value):
             if value[i] != "$":
@@ -234,91 +235,113 @@ class ColorfulStringBuilder:
                 i += 1
                 continue
 
-            fragment_parts: list[str] = []
-            token_end = -1
-            j = i + 1
-            while j < len(value):
-                if value[j] != "$":
-                    fragment_parts.append(value[j])
-                    j += 1
-                    continue
-
-                if j + 1 < len(value) and value[j + 1] == "$":
-                    fragment_parts.append("$")
-                    j += 2
-                    continue
-
-                token_end = j
-                break
-
-            if token_end < 0:
+            if i + 1 < len(value) and value[i + 1] == "$":
                 parts.append("$")
+                i += 2
+                continue
+
+            parsed = self.__parse_inline_token(value, i + 1)
+            if parsed is not None:
+                style_prefix, marker, marker_index, i = parsed
+                parts.append(style_prefix)
+                active_styles.append((style_prefix, marker, marker_index))
+                continue
+
+            if active_styles:
+                active_styles.pop()
+                parts.append("\x1b[0m")
+                if active_styles:
+                    parts.append("".join(style for style, _, _ in active_styles))
                 i += 1
                 continue
 
-            fragment = "".join(fragment_parts)
-            if ":" not in fragment:
-                parts.append("$" if fragment == "" else fragment)
-                i = token_end + 1
-                continue
+            raise ValueError(
+                f"invalid inline token expression at index {i}: expected a closing '$' "
+                "or a token opener in the form $TOKEN:text$"
+            )
 
-            token, text = fragment.split(":", 1)
-            underlined = token.startswith("_")
-            if underlined:
-                token = token[1:]
-
-            fg_token = token[:1].upper()
-            if fg_token not in ANSI_TOKEN_MAP:
-                parts.append(fragment)
-                i = token_end + 1
-                continue
-
-            parsed_end = 1
-            faint = False
-            if len(token) > parsed_end and token[parsed_end] == "-":
-                faint = True
-                parsed_end += 1
-
-            bg_token = ""
-            if len(token) > parsed_end and token[parsed_end] == ".":
-                if len(token) <= parsed_end + 1:
-                    parts.append(fragment)
-                    i = token_end + 1
-                    continue
-                bg_token = token[parsed_end + 1 : parsed_end + 2].upper()
-                if bg_token not in ANSI_TOKEN_MAP:
-                    parts.append(fragment)
-                    i = token_end + 1
-                    continue
-                parsed_end += 2
-
-            if parsed_end != len(token):
-                if "_" in token:
-                    raise ValueError(
-                        "underline marker '_' must be before foreground color"
-                    )
-                parts.append(fragment)
-                i = token_end + 1
-                continue
-
-            if underlined:
-                parts.append("\033[4m")
-
-            fg_base_code = int(ANSI_TOKEN_MAP[fg_token][2:4])
-            if faint:
-                parts.append(f"\033[2;{fg_base_code}m")
-            else:
-                parts.append(ANSI_TOKEN_MAP[fg_token])
-
-            if bg_token:
-                bg_code = f"\033[{int(ANSI_TOKEN_MAP[bg_token][2:4]) + 10}m"
-                parts.append(bg_code)
-
-            parts.append(text)
-            parts.append("\033[0m")
-            i = token_end + 1
+        if active_styles:
+            opened_segments = ", ".join(
+                f"'{marker}' at index {marker_index}"
+                for _, marker, marker_index in active_styles
+            )
+            raise ValueError(
+                "missing closing '$' for one or more "
+                f"opened $TOKEN:text$ segments ({opened_segments})"
+            )
 
         return "".join(parts)
+
+    def __parse_inline_token(
+        self, value: str, start: int
+    ) -> tuple[str, str, int, int] | None:
+        """Parse a token starting at ``start`` (right after ``$``)."""
+        token_chars: list[str] = []
+        j = start
+        while j < len(value):
+            if value[j] == ":":
+                break
+            if value[j] == "$":
+                return None
+            token_chars.append(value[j])
+            j += 1
+
+        if j >= len(value) or value[j] != ":":
+            return None
+
+        token = "".join(token_chars)
+        underlined = token.startswith("_")
+        if underlined:
+            token = token[1:]
+
+        fg_token = token[:1].upper()
+        if fg_token not in ANSI_TOKEN_COLORS:
+            raise ValueError(
+                f"invalid inline token '{token}': invalid foreground color field"
+            )
+
+        parsed_end = 1
+        faint = False
+        if len(token) > parsed_end and token[parsed_end] == "-":
+            faint = True
+            parsed_end += 1
+
+        bg_token = ""
+        if len(token) > parsed_end and token[parsed_end] == ".":
+            if len(token) <= parsed_end + 1:
+                raise ValueError(
+                    f"invalid inline token '{token}': missing background color field"
+                )
+            bg_token = token[parsed_end + 1 : parsed_end + 2].upper()
+            if bg_token not in ANSI_TOKEN_COLORS:
+                raise ValueError(
+                    f"invalid inline token '{token}': invalid background color field"
+                )
+            parsed_end += 2
+
+        if parsed_end != len(token):
+            if "_" in token:
+                raise ValueError("underline marker '_' must be before foreground color")
+            raise ValueError(
+                f"invalid inline token '{token}': unexpected characters after color fields"
+            )
+
+        prefix_parts: list[str] = []
+        if underlined:
+            prefix_parts.append("\x1b[4m")
+
+        fg_base_code = int(ANSI_TOKEN_COLORS[fg_token][2:4])
+        if faint:
+            prefix_parts.append(f"\x1b[2;{fg_base_code}m")
+        else:
+            prefix_parts.append(ANSI_TOKEN_COLORS[fg_token])
+
+        if bg_token:
+            bg_code = f"\x1b[{int(ANSI_TOKEN_COLORS[bg_token][2:4]) + 10}m"
+            prefix_parts.append(bg_code)
+
+        marker = f"${''.join(token_chars)}:"
+        return "".join(prefix_parts), marker, start - 1, j + 1
 
     def __asstr(self) -> str:
         """Get accumulated output or an empty string."""

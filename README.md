@@ -24,7 +24,7 @@ Available shortcut color properties are `d/r/g/y/b/p/c/w` (dark/red/green/yellow
 
 You can chain them for background presets, e.g. `c.b.g` means blue foreground + green background.
 
-Chaining is limited to two colors; `c.b.g.g` is not allowed.
+Chaining is limited to two colors; `c.b.g.r` is not allowed.
 
 ```python
 print(c.y << "Warning")
@@ -72,16 +72,16 @@ print(c.underline.g.b << "green on blue underline")
 
 ### 6) Faint Foreground
 
-Use `.faint` to switch the foreground to a faint ANSI variant. It must follow the foreground color token.
+Use `.faint` to switch the foreground to a faint ANSI variant. 
 
 ```python
-print(c.r.faint << "faint red")
-print(c.g.faint.b << "faint green on blue")
+print(c.faint.r << "faint red")
+print(c.faint.underline.g.b << "faint green on blue underline")
 ```
 
 Note: 
 
-- `c.faint` is no different from `c`, if you need a faint dark color, try `c.d.faint`. 
+- `c.faint` is no different from `c`, if you need a faint dark color, try `c.faint.d`. 
 
 ### 7) Inline Token Grammar
 
@@ -105,8 +105,9 @@ Grammar (inside `$...$`):
 
 Escaping:
 
-- Non-token fragments unwrap as plain text, e.g. `$hello$` -> `hello`, and `$$` -> `$`.
-- Inline token grammar is parsed only from input strings (e.g. `c("$R:error$")`); fluent builders like `c.g` do not accept `$TOKEN:text$` as property syntax.
+- Only `$$` is treated as an escaped dollar sign (`$`).
+- Any `$...$` fragment that is not a valid token expression raises `ValueError`.
+- A single unmatched `$` is treated as an error and raises `ValueError`.
 
 ## See Also
 ### Github repository
@@ -120,6 +121,11 @@ Escaping:
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.0.5
+* Improved inline token parsing diagnostics with clearer `ValueError` messages for malformed token expressions.
+* Added strict handling for unmatched single `$` markers and now raises explicit errors instead of silently accepting invalid input.
+* Fixed token rendering order so inline token fragments are interpreted before default style wrapping in chained color contexts.
+
 ### v0.0.4
 * Removed unnecessary imports.
 
