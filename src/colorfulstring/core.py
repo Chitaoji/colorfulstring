@@ -16,14 +16,14 @@ __all__ = ["c"]
 
 
 ANSI_TOKEN_COLORS: dict[str, str] = {
-    "D": "\033[30m",  # Dark/Black
-    "R": "\033[31m",  # Red
-    "G": "\033[32m",  # Green
-    "Y": "\033[33m",  # Yellow
-    "B": "\033[34m",  # Blue
-    "P": "\033[35m",  # Purple
-    "C": "\033[36m",  # Cyan
-    "W": "\033[37m",  # White
+    "D": "\x1b[30m",  # Dark/Black
+    "R": "\x1b[31m",  # Red
+    "G": "\x1b[32m",  # Green
+    "Y": "\x1b[33m",  # Yellow
+    "B": "\x1b[34m",  # Blue
+    "P": "\x1b[35m",  # Purple
+    "C": "\x1b[36m",  # Cyan
+    "W": "\x1b[37m",  # White
 }
 
 
@@ -302,20 +302,20 @@ class ColorfulStringBuilder:
                 continue
 
             if underlined:
-                parts.append("\033[4m")
+                parts.append("\x1b[4m")
 
             fg_base_code = int(ANSI_TOKEN_COLORS[fg_token][2:4])
             if faint:
-                parts.append(f"\033[2;{fg_base_code}m")
+                parts.append(f"\x1b[2;{fg_base_code}m")
             else:
                 parts.append(ANSI_TOKEN_COLORS[fg_token])
 
             if bg_token:
-                bg_code = f"\033[{int(ANSI_TOKEN_COLORS[bg_token][2:4]) + 10}m"
+                bg_code = f"\x1b[{int(ANSI_TOKEN_COLORS[bg_token][2:4]) + 10}m"
                 parts.append(bg_code)
 
             parts.append(text)
-            parts.append("\033[0m")
+            parts.append("\x1b[0m")
             i = token_end + 1
 
         return "".join(parts)
