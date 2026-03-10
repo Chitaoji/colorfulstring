@@ -15,7 +15,7 @@ from typing import Any, Callable, Self
 __all__ = ["c"]
 
 
-ANSI_TOKEN_MAP: dict[str, str] = {
+ANSI_TOKEN_COLORS: dict[str, str] = {
     "D": "\033[30m",  # Dark/Black
     "R": "\033[31m",  # Red
     "G": "\033[32m",  # Green
@@ -268,7 +268,7 @@ class ColorfulStringBuilder:
                 token = token[1:]
 
             fg_token = token[:1].upper()
-            if fg_token not in ANSI_TOKEN_MAP:
+            if fg_token not in ANSI_TOKEN_COLORS:
                 parts.append(fragment)
                 i = token_end + 1
                 continue
@@ -286,7 +286,7 @@ class ColorfulStringBuilder:
                     i = token_end + 1
                     continue
                 bg_token = token[parsed_end + 1 : parsed_end + 2].upper()
-                if bg_token not in ANSI_TOKEN_MAP:
+                if bg_token not in ANSI_TOKEN_COLORS:
                     parts.append(fragment)
                     i = token_end + 1
                     continue
@@ -304,14 +304,14 @@ class ColorfulStringBuilder:
             if underlined:
                 parts.append("\033[4m")
 
-            fg_base_code = int(ANSI_TOKEN_MAP[fg_token][2:4])
+            fg_base_code = int(ANSI_TOKEN_COLORS[fg_token][2:4])
             if faint:
                 parts.append(f"\033[2;{fg_base_code}m")
             else:
-                parts.append(ANSI_TOKEN_MAP[fg_token])
+                parts.append(ANSI_TOKEN_COLORS[fg_token])
 
             if bg_token:
-                bg_code = f"\033[{int(ANSI_TOKEN_MAP[bg_token][2:4]) + 10}m"
+                bg_code = f"\033[{int(ANSI_TOKEN_COLORS[bg_token][2:4]) + 10}m"
                 parts.append(bg_code)
 
             parts.append(text)
