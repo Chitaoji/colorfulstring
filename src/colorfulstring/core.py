@@ -204,7 +204,6 @@ class ColorfulStringBuilder:
             else:
                 has_default_style = bool(self._default_color or self._underlined)
                 if has_default_style and string:
-                    string = string.replace("$", "$$")
                     token = self._default_color
                     if self._faint and token:
                         if "." in token:
