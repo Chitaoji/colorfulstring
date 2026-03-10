@@ -75,7 +75,7 @@ class ColorfulStringBuilder:
     def __repr__(self) -> str:
         """Return accumulated string when finalized, else default repr."""
         if self._status is None and self._string is not None:
-            return self.__render_ansi_tokens(self._string)
+            return self._string
         return super().__repr__()
 
     def __str__(self) -> str:
@@ -200,7 +200,7 @@ class ColorfulStringBuilder:
         else:
             string = str(obj)
             if self._underlined and not self._default_color and string:
-                string = f"[4m{string}[0m"
+                string = f"\x1b[4m{string}\x1b[0m"
             else:
                 has_default_style = bool(self._default_color or self._underlined)
                 if has_default_style and string:
@@ -214,6 +214,7 @@ class ColorfulStringBuilder:
                     if self._underlined:
                         token = f"_{token}"
                     string = f"${token}:{string}$"
+            string = self.__render_ansi_tokens(string)
         if self._printer is not None:
             self._printer(repr(self.copy(string=string, status=None)))
         return string
