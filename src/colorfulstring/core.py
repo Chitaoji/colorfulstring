@@ -266,13 +266,15 @@ class ColorfulStringBuilder:
                 for _, marker, marker_index in active_styles
             )
             raise ValueError(
-                "unmatched inline token marker: missing closing '$' for one or more "
+                "missing closing '$' for one or more "
                 f"opened $TOKEN:text$ segments ({opened_segments})"
             )
 
         return "".join(parts)
 
-    def __parse_inline_token(self, value: str, start: int) -> tuple[str, str, int, int] | None:
+    def __parse_inline_token(
+        self, value: str, start: int
+    ) -> tuple[str, str, int, int] | None:
         """Parse a token starting at ``start`` (right after ``$``)."""
         token_chars: list[str] = []
         j = start
