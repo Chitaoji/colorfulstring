@@ -227,7 +227,7 @@ class ColorfulStringBuilder:
         `FG.BG`, `FG-.BG`, and can optionally be prefixed by `_` for underline.
         """
         parts: list[str] = []
-        active_styles: list[str] = []
+        active_styles: list[tuple[str, str, int]] = []
         i = 0
         while i < len(value):
             if value[i] != "$":
@@ -242,16 +242,16 @@ class ColorfulStringBuilder:
 
             parsed = self.__parse_inline_token(value, i + 1)
             if parsed is not None:
-                style_prefix, i = parsed
+                style_prefix, marker, marker_index, i = parsed
                 parts.append(style_prefix)
-                active_styles.append(style_prefix)
+                active_styles.append((style_prefix, marker, marker_index))
                 continue
 
             if active_styles:
                 active_styles.pop()
                 parts.append("\x1b[0m")
                 if active_styles:
-                    parts.append("".join(active_styles))
+                    parts.append("".join(style for style, _, _ in active_styles))
                 i += 1
                 continue
 
@@ -261,14 +261,18 @@ class ColorfulStringBuilder:
             )
 
         if active_styles:
+            opened_segments = ", ".join(
+                f"'{marker}' at index {marker_index}"
+                for _, marker, marker_index in active_styles
+            )
             raise ValueError(
                 "unmatched inline token marker: missing closing '$' for one or more "
-                "opened $TOKEN:text$ segments"
+                f"opened $TOKEN:text$ segments ({opened_segments})"
             )
 
         return "".join(parts)
 
-    def __parse_inline_token(self, value: str, start: int) -> tuple[str, int] | None:
+    def __parse_inline_token(self, value: str, start: int) -> tuple[str, str, int, int] | None:
         """Parse a token starting at ``start`` (right after ``$``)."""
         token_chars: list[str] = []
         j = start
@@ -334,7 +338,8 @@ class ColorfulStringBuilder:
             bg_code = f"\x1b[{int(ANSI_TOKEN_COLORS[bg_token][2:4]) + 10}m"
             prefix_parts.append(bg_code)
 
-        return "".join(prefix_parts), j + 1
+        marker = f"${''.join(token_chars)}:"
+        return "".join(prefix_parts), marker, start - 1, j + 1
 
     def __asstr(self) -> str:
         """Get accumulated output or an empty string."""
