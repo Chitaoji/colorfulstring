@@ -75,7 +75,7 @@ class ColorfulStringBuilder:
     def __repr__(self) -> str:
         """Return accumulated string when finalized, else default repr."""
         if self._status is None and self._string is not None:
-            return self._string
+            return self.__render_ansi_tokens(self._string)
         return super().__repr__()
 
     def __str__(self) -> str:
@@ -125,7 +125,7 @@ class ColorfulStringBuilder:
             `(c.r << "42") >> int`
         """
         if self._status is None and self._string is not None:
-            return obj(self._string)
+            return obj(repr(self))
         raise ValueError(f"nothing to convert to {obj}")
 
     def __matmul__(self, obj: str | Self | Any) -> Self:
@@ -214,9 +214,8 @@ class ColorfulStringBuilder:
                     if self._underlined:
                         token = f"_{token}"
                     string = f"${token}:{string}$"
-                string = self.__render_ansi_tokens(string)
         if self._printer is not None:
-            self._printer(string)
+            self._printer(repr(self.copy(string=string, status=None)))
         return string
 
     def __render_ansi_tokens(self, value: str) -> str:
