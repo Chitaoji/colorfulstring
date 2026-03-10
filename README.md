@@ -120,6 +120,9 @@ Escaping:
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.0.4
+* Removed unnecessary imports.
+
 ### v0.0.3
 * Now correctly handles escaped dollar sequences like `$$` in inline token parsing.
 * Improved README structure and polished API usage descriptions.

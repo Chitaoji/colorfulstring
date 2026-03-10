@@ -12,8 +12,6 @@ NOTE: this module is private. All functions and objects are available in the mai
 from functools import partial
 from typing import Any, Callable, Self
 
-import loggings
-
 __all__ = ["c"]
 
 
