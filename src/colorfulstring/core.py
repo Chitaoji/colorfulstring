@@ -255,10 +255,14 @@ class ColorfulStringBuilder:
                 i += 1
                 continue
 
-            raise ValueError("invalid inline token expression")
+            raise ValueError(
+                f"invalid inline token expression at index {i}: expected a closing '$' or a token opener in the form $TOKEN:text$"
+            )
 
         if active_styles:
-            raise ValueError("unmatched '$' in inline expression")
+            raise ValueError(
+                "unmatched inline token marker: missing closing '$' for one or more opened $TOKEN:text$ segments"
+            )
 
         return "".join(parts)
 
@@ -284,7 +288,9 @@ class ColorfulStringBuilder:
 
         fg_token = token[:1].upper()
         if fg_token not in ANSI_TOKEN_COLORS:
-            return None
+            raise ValueError(
+                f"invalid inline token '{token}': invalid foreground color field"
+            )
 
         parsed_end = 1
         faint = False
@@ -295,16 +301,22 @@ class ColorfulStringBuilder:
         bg_token = ""
         if len(token) > parsed_end and token[parsed_end] == ".":
             if len(token) <= parsed_end + 1:
-                return None
+                raise ValueError(
+                    f"invalid inline token '{token}': missing background color field"
+                )
             bg_token = token[parsed_end + 1 : parsed_end + 2].upper()
             if bg_token not in ANSI_TOKEN_COLORS:
-                return None
+                raise ValueError(
+                    f"invalid inline token '{token}': invalid background color field"
+                )
             parsed_end += 2
 
         if parsed_end != len(token):
             if "_" in token:
                 raise ValueError("underline marker '_' must be before foreground color")
-            return None
+            raise ValueError(
+                f"invalid inline token '{token}': unexpected characters after color fields"
+            )
 
         prefix_parts: list[str] = []
         if underlined:
