@@ -268,13 +268,14 @@ class ColorfulStringBuilder:
                 break
 
             if j >= len(value):
-                parts.append("$")
-                i += 1
-                continue
+                raise ValueError("unmatched '$' in inline expression")
 
             fragment = "".join(fragment_parts)
             parts.append("$" if fragment == "" else fragment)
             i = j + 1
+
+        if active_styles:
+            raise ValueError("unmatched '$' in inline expression")
 
         return "".join(parts)
 
