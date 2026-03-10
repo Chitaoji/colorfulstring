@@ -256,12 +256,14 @@ class ColorfulStringBuilder:
                 continue
 
             raise ValueError(
-                f"invalid inline token expression at index {i}: expected a closing '$' or a token opener in the form $TOKEN:text$"
+                f"invalid inline token expression at index {i}: expected a closing '$' "
+                "or a token opener in the form $TOKEN:text$"
             )
 
         if active_styles:
             raise ValueError(
-                "unmatched inline token marker: missing closing '$' for one or more opened $TOKEN:text$ segments"
+                "unmatched inline token marker: missing closing '$' for one or more "
+                "opened $TOKEN:text$ segments"
             )
 
         return "".join(parts)
