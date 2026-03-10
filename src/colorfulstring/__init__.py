@@ -106,7 +106,8 @@ Grammar (inside `$...$`):
 
 Escaping:
 
-- Non-token fragments unwrap as plain text, e.g. `$hello$` -> `hello`, and `$$` -> `$`.
+- Only `$$` is treated as an escaped dollar sign (`$`).
+- Any `$...$` fragment that is not a valid token expression raises `ValueError`.
 
 ## See Also
 ### Github repository

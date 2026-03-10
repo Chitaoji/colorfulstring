@@ -105,7 +105,8 @@ Grammar (inside `$...$`):
 
 Escaping:
 
-- Non-token fragments unwrap as plain text, e.g. `$hello$` -> `hello`, and `$$` -> `$`.
+- Only `$$` is treated as an escaped dollar sign (`$`).
+- Any `$...$` fragment that is not a valid token expression raises `ValueError`.
 - A single unmatched `$` is treated as an error and raises `ValueError`.
 - Inline token grammar is parsed only from input strings (e.g. `c("$R:error$")`); fluent builders like `c.g` do not accept `$TOKEN:text$` as property syntax.
 

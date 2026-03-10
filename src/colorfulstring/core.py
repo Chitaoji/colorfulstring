@@ -223,7 +223,6 @@ class ColorfulStringBuilder:
 
         Valid inline format is `$TOKEN:text$` where `TOKEN` is `FG`, `FG-`,
         `FG.BG`, `FG-.BG`, and can optionally be prefixed by `_` for underline.
-        Fragments without `:` are treated as plain text between `$...$`.
         """
         parts: list[str] = []
         active_styles: list[str] = []
@@ -254,25 +253,7 @@ class ColorfulStringBuilder:
                 i += 1
                 continue
 
-            fragment_parts: list[str] = []
-            j = i + 1
-            while j < len(value):
-                if value[j] != "$":
-                    fragment_parts.append(value[j])
-                    j += 1
-                    continue
-                if j + 1 < len(value) and value[j + 1] == "$":
-                    fragment_parts.append("$")
-                    j += 2
-                    continue
-                break
-
-            if j >= len(value):
-                raise ValueError("unmatched '$' in inline expression")
-
-            fragment = "".join(fragment_parts)
-            parts.append("$" if fragment == "" else fragment)
-            i = j + 1
+            raise ValueError("invalid inline token expression")
 
         if active_styles:
             raise ValueError("unmatched '$' in inline expression")
