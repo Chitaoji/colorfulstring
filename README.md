@@ -24,7 +24,7 @@ Available shortcut color properties are `d/r/g/y/b/p/c/w` (dark/red/green/yellow
 
 You can chain them for background presets, e.g. `c.b.g` means blue foreground + green background.
 
-Chaining is limited to two colors; `c.b.g.g` is not allowed.
+Chaining is limited to two colors; `c.b.g.r` is not allowed.
 
 ```python
 print(c.y << "Warning")
@@ -72,16 +72,16 @@ print(c.underline.g.b << "green on blue underline")
 
 ### 6) Faint Foreground
 
-Use `.faint` to switch the foreground to a faint ANSI variant. It must follow the foreground color token.
+Use `.faint` to switch the foreground to a faint ANSI variant. 
 
 ```python
-print(c.r.faint << "faint red")
-print(c.g.faint.b << "faint green on blue")
+print(c.faint.r << "faint red")
+print(c.faint.underline.g.b << "faint green on blue underline")
 ```
 
 Note: 
 
-- `c.faint` is no different from `c`, if you need a faint dark color, try `c.d.faint`. 
+- `c.faint` is no different from `c`, if you need a faint dark color, try `c.faint.d`. 
 
 ### 7) Inline Token Grammar
 
