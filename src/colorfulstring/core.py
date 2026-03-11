@@ -128,7 +128,9 @@ class ColorfulStringBuilder:
         Example:
             `(c.r << "42") >> int`
         """
-        if self._status is None and self._string is not None:
+        if self._status is not None:
+            raise ValueError("unfinished call to ifelse(), iftrue() or ifnot()")
+        if self._string is not None:
             return obj(repr(self))
         raise ValueError(f"nothing to convert to {obj}")
 
@@ -137,7 +139,7 @@ class ColorfulStringBuilder:
         return self << obj
 
     @staticmethod
-    def plain_text(obj: "str | ColorfulStringBuilder") -> str:
+    def plaintext(obj: "str | ColorfulStringBuilder") -> str:
         """Return finalized output of a builder with ANSI escape codes removed."""
         if isinstance(obj, ColorfulStringBuilder):
             if obj._status is None and obj._string is not None:
@@ -145,7 +147,11 @@ class ColorfulStringBuilder:
             raise ValueError("nothing to convert to plain text")
         if isinstance(obj, str):
             return ANSI_ESCAPE_RE.sub("", obj)
-        raise TypeError("plain_text() expects a str or ColorfulStringBuilder object")
+        raise TypeError(
+            f"{ColorfulStringBuilder.plaintext.__name__}() expected a str or "
+            f"{ColorfulStringBuilder.__name__} object, got instance of {type(obj)} "
+            "instead"
+        )
 
     def ifelse(self, condition: bool) -> Self:
         """Start a two-branch conditional chain.
