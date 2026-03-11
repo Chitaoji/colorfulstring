@@ -10,6 +10,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from functools import partial
+import re
 from typing import Any, Callable, Self
 
 __all__ = ["c"]
@@ -25,6 +26,9 @@ ANSI_TOKEN_COLORS: dict[str, str] = {
     "C": "\x1b[36m",  # Cyan
     "W": "\x1b[37m",  # White
 }
+
+
+ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 
 class _DefaultReceiver:
@@ -131,6 +135,15 @@ class ColorfulStringBuilder:
     def __matmul__(self, obj: str | Self | Any) -> Self:
         """Alias of `<<` for users who prefer `@` syntax."""
         return self << obj
+
+    @staticmethod
+    def plain_text(obj: "ColorfulStringBuilder") -> str:
+        """Return finalized output of a builder with ANSI escape codes removed."""
+        if not isinstance(obj, ColorfulStringBuilder):
+            raise TypeError("plain_text() expects a ColorfulStringBuilder object")
+        if obj._status is None and obj._string is not None:
+            return ANSI_ESCAPE_RE.sub("", obj._string)
+        raise ValueError("nothing to convert to plain text")
 
     def ifelse(self, condition: bool) -> Self:
         """Start a two-branch conditional chain.

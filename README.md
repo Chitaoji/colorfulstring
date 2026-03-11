@@ -39,7 +39,16 @@ Use `<<` (or `@`) to append fragments in sequence:
 print(c.b << "[INFO]" << " service started")
 ```
 
-### 3) Conditional Output
+### 3) `c()` Shortcut
+
+`c(text)` immediately converts one fragment using the current style context and returns a string.
+
+```python
+print(c.r("error"))
+print(c.underline.g("underlined green"))
+```
+
+### 4) Conditional Output
 
 - `iftrue(condition)`: include the next fragment only when `condition` is `True`.
 - `ifnot(condition)`: include the next fragment only when `condition` is `False`.
@@ -52,7 +61,7 @@ line = c << "status: " << c.ifelse(ok) << c.g("success") << c.r("failed")
 print(line)
 ```
 
-### 4) Immediate Printing
+### 5) Immediate Printing
 
 `c.print` outputs each generated fragment immediately (without an automatic newline). It can be combined with `c.endl`.
 
@@ -60,7 +69,7 @@ print(line)
 line = c.print << "hello" << c.endl
 ```
 
-### 5) Underline
+### 6) Underline
 
 Use `.underline` to add underline style:
 
@@ -70,7 +79,7 @@ print(c.underline.g << "green underline")
 print(c.underline.g.b << "green on blue underline")
 ```
 
-### 6) Faint Foreground
+### 7) Faint Foreground
 
 Use `.faint` to switch the foreground to a faint ANSI variant. 
 
@@ -83,7 +92,7 @@ Note:
 
 - `c.faint` is no different from `c`, if you need a faint dark color, try `c.faint.d`. 
 
-### 7) Inline Token Grammar
+### 8) Inline Token Grammar
 
 Besides fluent chaining, `colorfulstring` can also parse inline token fragments from plain strings:
 
