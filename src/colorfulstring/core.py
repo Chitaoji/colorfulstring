@@ -176,6 +176,16 @@ class ColorfulStringBuilder:
         return self.copy(string="", status=(bool(condition), False))
 
     def ifcases(self, *conditions: bool) -> Self:
+        """Build a multi-branch conditional chain.
+
+        This is shorthand for nesting multiple :meth:`ifelse` calls.
+        For ``n`` conditions, exactly ``n + 1`` subsequent fragments are expected,
+        and the first branch whose condition is ``True`` is selected; otherwise the
+        final fallback fragment is used.
+
+        Example:
+            ``c.ifcases(a, b) << branch_a << branch_b << fallback``
+        """
         if len(conditions) == 0:
             raise ValueError("no conditions")
         obj = self

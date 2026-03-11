@@ -63,12 +63,17 @@ print(c.underline.g("underlined green"))
 - `iftrue(condition)`: include the next fragment only when `condition` is `True`.
 - `ifnot(condition)`: include the next fragment only when `condition` is `False`.
 - `ifelse(condition)`: choose between the next two fragments.
+- `ifcases(cond1, cond2, ...)`: chain multiple `ifelse` branches and then provide one fallback fragment.
 
 ```python
 
 ok = True
 line = c << "status: " << c.ifelse(ok) << c.g("success") << c.r("failed")
 print(line)
+
+score = 82
+level = c.ifcases(score >= 90, score >= 75) << c.g("A") << c.y("B") << c.r("C")
+print(c << "level: " << level)
 ```
 
 ### 5) Immediate Printing
