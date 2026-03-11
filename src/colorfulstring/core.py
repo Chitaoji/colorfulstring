@@ -175,7 +175,7 @@ class ColorfulStringBuilder:
             raise ValueError("duplicated call to ifelse(), iftrue() or ifnot()")
         return self.copy(string="", status=(bool(condition), False))
 
-    def matchcase(self, *conditions: bool) -> Self:
+    def ifcases(self, *conditions: bool) -> Self:
         if len(conditions) == 0:
             raise ValueError("no conditions")
         obj = self
