@@ -142,8 +142,6 @@ This project falls under the BSD 3-Clause License.
 ## History
 ### v0.0.6
 * Added `builder >> c.plain_text` / `c.plain_text(...)` support to strip ANSI escape sequences from finalized output.
-* Added explicit cast piping via `builder >> type`, including clear `ValueError`/`TypeError` diagnostics for invalid conversions.
-* Refined README usage docs for `>>` conversion flow and stricter token error behavior.
 
 ### v0.0.5
 * Improved inline token parsing diagnostics with clearer `ValueError` messages for malformed token expressions.
