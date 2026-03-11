@@ -9,8 +9,8 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
-from functools import partial
 import re
+from functools import partial
 from typing import Any, Callable, Self
 
 __all__ = ["c"]
@@ -129,7 +129,7 @@ class ColorfulStringBuilder:
             `(c.r << "42") >> int`
         """
         if self._status is None and self._string is not None:
-            return obj(repr(self))
+            return obj(self)
         raise ValueError(f"nothing to convert to {obj}")
 
     def __matmul__(self, obj: str | Self | Any) -> Self:
