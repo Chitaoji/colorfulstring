@@ -137,13 +137,15 @@ class ColorfulStringBuilder:
         return self << obj
 
     @staticmethod
-    def plain_text(obj: "ColorfulStringBuilder") -> str:
+    def plain_text(obj: "str | ColorfulStringBuilder") -> str:
         """Return finalized output of a builder with ANSI escape codes removed."""
-        if not isinstance(obj, ColorfulStringBuilder):
-            raise TypeError("plain_text() expects a ColorfulStringBuilder object")
-        if obj._status is None and obj._string is not None:
-            return ANSI_ESCAPE_RE.sub("", obj._string)
-        raise ValueError("nothing to convert to plain text")
+        if isinstance(obj, ColorfulStringBuilder):
+            if obj._status is None and obj._string is not None:
+                return ANSI_ESCAPE_RE.sub("", obj._string)
+            raise ValueError("nothing to convert to plain text")
+        if isinstance(obj, str):
+            return ANSI_ESCAPE_RE.sub("", obj)
+        raise TypeError("plain_text() expects a str or ColorfulStringBuilder object")
 
     def ifelse(self, condition: bool) -> Self:
         """Start a two-branch conditional chain.
