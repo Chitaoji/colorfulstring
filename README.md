@@ -39,6 +39,16 @@ Use `<<` (or `@`) to append fragments in sequence:
 print(c.b << "[INFO]" << " service started")
 ```
 
+Use `>>` to convert a finished builder:
+
+- `builder >> str`: finalize as a regular Python string (same as `str(builder)`).
+- `builder >> c.plain_text`: finalize and strip ANSI escape codes.
+
+```python
+ansi = (c.r << "Error") >> str
+plain = (c.r << "Error") >> c.plain_text
+```
+
 ### 3) `c()` Shortcut
 
 `c(text)` immediately converts one fragment using the current style context and returns a string.
