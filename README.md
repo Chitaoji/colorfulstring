@@ -88,9 +88,9 @@ Note:
 Besides fluent chaining, `colorfulstring` can also parse inline token fragments from plain strings:
 
 ```python
-print(c("$R:error$"))
-print(c("$G-.B:faint green on blue$"))
-print(c("$_Y:underlined yellow$"))
+print(c << "$R:error$")
+print(c << "$G-.B:faint green on blue$")
+print(c << "$_Y:underlined yellow$")
 ```
 
 Grammar (inside `$...$`):
