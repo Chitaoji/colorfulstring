@@ -9,6 +9,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+import re
 from functools import partial
 from typing import Any, Callable, Self
 
@@ -25,6 +26,9 @@ ANSI_TOKEN_COLORS: dict[str, str] = {
     "C": "\x1b[36m",  # Cyan
     "W": "\x1b[37m",  # White
 }
+
+
+ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 
 class _DefaultReceiver:
@@ -124,13 +128,30 @@ class ColorfulStringBuilder:
         Example:
             `(c.r << "42") >> int`
         """
-        if self._status is None and self._string is not None:
+        if self._status is not None:
+            raise ValueError("unfinished call to ifelse(), iftrue() or ifnot()")
+        if self._string is not None:
             return obj(repr(self))
         raise ValueError(f"nothing to convert to {obj}")
 
     def __matmul__(self, obj: str | Self | Any) -> Self:
         """Alias of `<<` for users who prefer `@` syntax."""
         return self << obj
+
+    @staticmethod
+    def plaintext(obj: "str | ColorfulStringBuilder") -> str:
+        """Return finalized output of a builder with ANSI escape codes removed."""
+        if isinstance(obj, ColorfulStringBuilder):
+            if obj._status is None and obj._string is not None:
+                return ANSI_ESCAPE_RE.sub("", obj._string)
+            raise ValueError("nothing to convert to plain text")
+        if isinstance(obj, str):
+            return ANSI_ESCAPE_RE.sub("", obj)
+        raise TypeError(
+            f"{ColorfulStringBuilder.plaintext.__name__}() expected a str or "
+            f"{ColorfulStringBuilder.__name__} object, got instance of {type(obj)} "
+            "instead"
+        )
 
     def ifelse(self, condition: bool) -> Self:
         """Start a two-branch conditional chain.
@@ -153,6 +174,24 @@ class ColorfulStringBuilder:
         if self._status is not None:
             raise ValueError("duplicated call to ifelse(), iftrue() or ifnot()")
         return self.copy(string="", status=(bool(condition), False))
+
+    def ifcases(self, *conditions: bool) -> Self:
+        """Build a multi-branch conditional chain.
+
+        This is shorthand for nesting multiple :meth:`ifelse` calls.
+        For ``n`` conditions, exactly ``n + 1`` subsequent fragments are expected,
+        and the first branch whose condition is ``True`` is selected; otherwise the
+        final fallback fragment is used.
+
+        Example:
+            ``c.ifcases(a, b) << branch_a << branch_b << fallback``
+        """
+        if len(conditions) == 0:
+            raise ValueError("no conditions")
+        obj = self
+        for cond in conditions:
+            obj = obj.ifelse(cond)
+        return obj
 
     def copy(
         self,
