@@ -188,8 +188,8 @@ class ColorfulStringBuilder:
         """
         if len(conditions) == 0:
             raise ValueError("no conditions")
-        obj = self
-        for cond in conditions[::-1]:
+        obj = self.ifelse(conditions[-1])
+        for cond in conditions[::-2]:
             obj = obj << c.ifelse(cond)
         return obj
 
