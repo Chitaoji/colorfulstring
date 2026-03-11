@@ -147,6 +147,7 @@ This project falls under the BSD 3-Clause License.
 ## History
 ### v0.0.6
 * Added `builder >> c.plaintext` / `c.plaintext(...)` support to strip ANSI escape sequences from finalized output.
+* Added new method `c.ifcases(cond1, cond2, ...)` for multi-branch conditional usage.
 
 ### v0.0.5
 * Improved inline token parsing diagnostics with clearer `ValueError` messages for malformed token expressions.
