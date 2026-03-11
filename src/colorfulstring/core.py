@@ -129,7 +129,7 @@ class ColorfulStringBuilder:
             `(c.r << "42") >> int`
         """
         if self._status is None and self._string is not None:
-            return obj(self)
+            return obj(repr(self))
         raise ValueError(f"nothing to convert to {obj}")
 
     def __matmul__(self, obj: str | Self | Any) -> Self:
