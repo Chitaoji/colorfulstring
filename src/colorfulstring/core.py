@@ -189,8 +189,8 @@ class ColorfulStringBuilder:
         if len(conditions) == 0:
             raise ValueError("no conditions")
         obj = self
-        for cond in conditions:
-            obj = obj.ifelse(cond)
+        for cond in conditions[::-1]:
+            obj = obj << c.ifelse(cond)
         return obj
 
     def copy(
