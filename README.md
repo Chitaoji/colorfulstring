@@ -45,8 +45,8 @@ Use `>>` to convert a finished builder:
 - `builder >> c.plain_text`: finalize and strip ANSI escape codes.
 
 ```python
-ansi = (c.r << "Error") >> str
-plain = (c.r << "Error") >> c.plain_text
+ansi = c.r << "Error" >> str
+plain = c.r << "Error" >> c.plain_text
 ```
 
 ### 3) `c()` Shortcut
@@ -140,6 +140,8 @@ Escaping:
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.0.6
+
 ### v0.0.5
 * Improved inline token parsing diagnostics with clearer `ValueError` messages for malformed token expressions.
 * Added strict handling for unmatched single `$` markers and now raises explicit errors instead of silently accepting invalid input.
