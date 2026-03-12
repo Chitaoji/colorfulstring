@@ -106,12 +106,9 @@ class ColorfulStringBuilder:
         """
         if isinstance(obj, self.__class__):
             if obj._status is not None:
-                if (
-                    not isinstance(obj._receiver, _DefaultReceiver)
-                    or obj._string is not None
-                ):
+                if obj._string is not None:
                     raise ValueError("unfinished call to ifelse(), iftrue() or ifnot()")
-                obj._receiver = self
+                obj.__bind_to_receiver(self)
                 return obj
 
             if obj._string is None:
@@ -175,21 +172,50 @@ class ColorfulStringBuilder:
             raise ValueError("duplicated call to ifelse(), iftrue() or ifnot()")
         return self.copy(string="", status=(bool(condition), False))
 
-    def ifcases(self, *conditions: bool) -> Self:
+    def matchcases(self, value: Any, *cases: Any, fallback: bool = True) -> Self:
+        """Return an :meth:`ifcases` chain by matching ``value`` against ``cases``.
+
+        Example:
+            ``c.matchcases(level, "ok", "warn") << ok_branch << warn_branch <<
+            fallback``
+
+        Args:
+            value: Candidate value to be matched.
+            *cases: Values to compare using ``==``.
+            fallback: Whether to expect a final "default" branch. Keep this
+                ``True`` when you want to provide a fallback fragment for the
+                no-match case; set it to ``False`` to omit that extra fragment.
+
+        Returns:
+            A conditional chain equivalent to
+            ``c.ifcases(*(value == case for case in cases), fallback=fallback)``.
+        """
+        if len(cases) == 0:
+            raise ValueError("no cases")
+        return c.ifcases(*(value == case for case in cases), fallback=fallback)
+
+    def ifcases(self, *conditions: bool, fallback: bool = True) -> Self:
         """Build a multi-branch conditional chain.
 
         This is shorthand for nesting multiple :meth:`ifelse` calls.
-        For ``n`` conditions, exactly ``n + 1`` subsequent fragments are expected,
-        and the first branch whose condition is ``True`` is selected; otherwise the
-        final fallback fragment is used.
+        For ``n`` conditions, the first branch whose condition is ``True`` is
+        selected.
+
+        - When ``fallback=True`` (default), exactly ``n + 1`` subsequent fragments
+          are expected, and the final fallback fragment is used when all
+          conditions are ``False``.
+        - When ``fallback=False``, exactly ``n`` subsequent fragments are expected,
+          and no fragment is appended when all conditions are ``False``.
 
         Example:
             ``c.ifcases(a, b) << branch_a << branch_b << fallback``
         """
         if len(conditions) == 0:
             raise ValueError("no conditions")
-        obj = self
-        for cond in conditions[::-1]:
+
+        start = self.ifelse if fallback else self.iftrue
+        obj = start(conditions[-1])
+        for cond in conditions[-2::-1]:
             obj = obj << c.ifelse(cond)
         return obj
 
@@ -214,6 +240,13 @@ class ColorfulStringBuilder:
             self._receiver if receiver is Ellipsis else receiver,
             self._printer if printer is Ellipsis else printer,
         )
+
+    def __bind_to_receiver(self, receiver: Self) -> None:
+        """Attach the tail of a conditional chain to ``receiver``."""
+        node: Self = self
+        while not isinstance(node._receiver, _DefaultReceiver):
+            node = node._receiver
+        node._receiver = receiver
 
     def __recv(self, obj: str | Self | Any) -> Self:
         """Receive an object and merge it into current/conditional pipeline."""

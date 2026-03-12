@@ -145,6 +145,10 @@ Escaping:
 This project falls under the BSD 3-Clause License.
 
 ## History
+### v0.0.7
+* Added `matchcases(value, *cases, fallback=True)` helper for value-based multi-branch conditional rendering.
+* Improved conditional chaining behavior and docs for `ifcases(..., fallback=...)` fallback handling.
+
 ### v0.0.6
 * Added `builder >> c.plaintext` / `c.plaintext(...)` support to strip ANSI escape sequences from finalized output.
 * Added new method `c.ifcases(cond1, cond2, ...)` for multi-branch conditional usage.

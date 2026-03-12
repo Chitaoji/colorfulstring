@@ -48,6 +48,10 @@ print(c.b << "[INFO]" << " service started")
 ok = True
 line = c << "status: " << c.ifelse(ok) << c.g("success") << c.r("failed")
 print(line)
+
+# match-style branching helper
+line = c.matchcases(level, "ok", "warn") << c.g("success") << c.y("warning") << c.r("failed")
+print(line)
 ```
 
 ### 4) Immediate Printing
