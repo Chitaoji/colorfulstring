@@ -30,6 +30,7 @@ ANSI_TOKEN_COLORS: dict[str, str] = {
 
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*m")
 
+
 class _DefaultReceiver:
     """Fallback receiver used by conditional pipelines."""
 
@@ -174,27 +175,25 @@ class ColorfulStringBuilder:
             raise ValueError("duplicated call to ifelse(), iftrue() or ifnot()")
         return self.copy(string="", status=(bool(condition), False))
 
-    def matchcases(
-        self, value: Any, *patterns: Any, fallback: bool = True
-    ) -> Self:
-        """Return an :meth:`ifcases` chain by matching ``value`` against patterns.
+    def matchcases(self, value: Any, *cases: Any, fallback: bool = True) -> Self:
+        """Return an :meth:`ifcases` chain by matching ``value`` against ``cases``.
 
         Example:
-            ``c.matchcases(level, "ok", "warn") << ok_branch << warn_branch << fallback``
+            ``c.matchcases(level, "ok", "warn") << ok_branch << warn_branch <<
+            fallback``
 
         Args:
             value: Candidate value to be matched.
-            *patterns: Values to compare using ``==``.
+            *cases: Values to compare using ``==``.
+            fallback: Whether the final fallback fragment is required.
 
         Returns:
             A conditional chain equivalent to
-            ``c.ifcases(*(value == pattern for pattern in patterns), fallback=fallback)``.
+            ``c.ifcases(*(value == case for case in cases), fallback=fallback)``.
         """
-        if len(patterns) == 0:
-            raise ValueError("no patterns")
-        return c.ifcases(
-            *(value == pattern for pattern in patterns), fallback=fallback
-        )
+        if len(cases) == 0:
+            raise ValueError("no cases")
+        return c.ifcases(*(value == case for case in cases), fallback=fallback)
 
     def ifcases(self, *conditions: bool, fallback: bool = True) -> Self:
         """Build a multi-branch conditional chain.
