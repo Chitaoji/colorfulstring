@@ -30,7 +30,6 @@ ANSI_TOKEN_COLORS: dict[str, str] = {
 
 ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-9;]*m")
 
-
 class _DefaultReceiver:
     """Fallback receiver used by conditional pipelines."""
 
@@ -175,20 +174,49 @@ class ColorfulStringBuilder:
             raise ValueError("duplicated call to ifelse(), iftrue() or ifnot()")
         return self.copy(string="", status=(bool(condition), False))
 
-    def ifcases(self, *conditions: bool) -> Self:
+    def matchcases(
+        self, value: Any, *patterns: Any, fallback: bool = True
+    ) -> Self:
+        """Return an :meth:`ifcases` chain by matching ``value`` against patterns.
+
+        Example:
+            ``c.matchcases(level, "ok", "warn") << ok_branch << warn_branch << fallback``
+
+        Args:
+            value: Candidate value to be matched.
+            *patterns: Values to compare using ``==``.
+
+        Returns:
+            A conditional chain equivalent to
+            ``c.ifcases(*(value == pattern for pattern in patterns), fallback=fallback)``.
+        """
+        if len(patterns) == 0:
+            raise ValueError("no patterns")
+        return c.ifcases(
+            *(value == pattern for pattern in patterns), fallback=fallback
+        )
+
+    def ifcases(self, *conditions: bool, fallback: bool = True) -> Self:
         """Build a multi-branch conditional chain.
 
         This is shorthand for nesting multiple :meth:`ifelse` calls.
-        For ``n`` conditions, exactly ``n + 1`` subsequent fragments are expected,
-        and the first branch whose condition is ``True`` is selected; otherwise the
-        final fallback fragment is used.
+        For ``n`` conditions, the first branch whose condition is ``True`` is
+        selected.
+
+        - When ``fallback=True`` (default), exactly ``n + 1`` subsequent fragments
+          are expected, and the final fallback fragment is used when all
+          conditions are ``False``.
+        - When ``fallback=False``, exactly ``n`` subsequent fragments are expected,
+          and no fragment is appended when all conditions are ``False``.
 
         Example:
             ``c.ifcases(a, b) << branch_a << branch_b << fallback``
         """
         if len(conditions) == 0:
             raise ValueError("no conditions")
-        obj = self.ifelse(conditions[-1])
+
+        start = self.ifelse if fallback else self.iftrue
+        obj = start(conditions[-1])
         for cond in conditions[::-2]:
             obj = obj << c.ifelse(cond)
         return obj
