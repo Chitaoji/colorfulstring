@@ -106,12 +106,9 @@ class ColorfulStringBuilder:
         """
         if isinstance(obj, self.__class__):
             if obj._status is not None:
-                if (
-                    not isinstance(obj._receiver, _DefaultReceiver)
-                    or obj._string is not None
-                ):
+                if obj._string is not None:
                     raise ValueError("unfinished call to ifelse(), iftrue() or ifnot()")
-                obj._receiver = self
+                obj.__bind_to_receiver(self)
                 return obj
 
             if obj._string is None:
@@ -185,7 +182,9 @@ class ColorfulStringBuilder:
         Args:
             value: Candidate value to be matched.
             *cases: Values to compare using ``==``.
-            fallback: Whether the final fallback fragment is required.
+            fallback: Whether to expect a final "default" branch. Keep this
+                ``True`` when you want to provide a fallback fragment for the
+                no-match case; set it to ``False`` to omit that extra fragment.
 
         Returns:
             A conditional chain equivalent to
@@ -216,7 +215,7 @@ class ColorfulStringBuilder:
 
         start = self.ifelse if fallback else self.iftrue
         obj = start(conditions[-1])
-        for cond in conditions[::-2]:
+        for cond in conditions[-2::-1]:
             obj = obj << c.ifelse(cond)
         return obj
 
@@ -241,6 +240,13 @@ class ColorfulStringBuilder:
             self._receiver if receiver is Ellipsis else receiver,
             self._printer if printer is Ellipsis else printer,
         )
+
+    def __bind_to_receiver(self, receiver: Self) -> None:
+        """Attach the tail of a conditional chain to ``receiver``."""
+        node: Self = self
+        while not isinstance(node._receiver, _DefaultReceiver):
+            node = node._receiver
+        node._receiver = receiver
 
     def __recv(self, obj: str | Self | Any) -> Self:
         """Receive an object and merge it into current/conditional pipeline."""
